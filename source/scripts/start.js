@@ -1,7 +1,6 @@
 import chalk from 'chalk'
 import webpack from 'webpack'
 import WebpackDevServer from 'webpack-dev-server'
-import historyApiFallback from 'connect-history-api-fallback'
 import getWebpackConfig from '../config/webpack.config'
 import getPaths from '../config/paths'
 

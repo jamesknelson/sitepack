@@ -9,9 +9,9 @@ export default function render(site, path) {
   })
 
   ReactDOMServer.renderToString(
-    <Application
-      history={history}
-      site={site}
-    />
+    React.createElement(Application, {
+    history: history,
+    site: site,
+  })
   )
 }

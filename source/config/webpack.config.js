@@ -60,7 +60,7 @@ export default function getWebpackConfig({ isProduction, sitepackConfig, paths, 
       root: paths.ownNodeModules,
       modulesDirectories: [
         paths.ownLoaders,
-      ],
+      ]
     },
 
     module: {

@@ -42,17 +42,18 @@ program.command('start')
   .option('-p, --port <port>', 'Set port. Defaults to 4000', '4000')
   .option('-c, --config [file]', 'The path to the sitepack.config.js file.', 'sitepack.config.js')
   .action(function (command) {
-    var start = require('../scripts/start').default
+    var start = require('../lib/scripts/start').default
     start(getConfig(command))
   })
 
 program.command('build')
   .description('Build a Sitepack project.')
   .option('-c, --config [file]', 'The path to the sitepack.config.js file.', 'sitepack.config.js')
+  .option('-o, --output [directory]', 'The directory to write the output to.', 'site/build')
   .action(function (command) {
     process.env.NODE_ENV = 'production'
 
-    var build = require('../scripts/build').default
+    var build = require('../lib/scripts/build').default
     build(getConfig(command), function (err) {
       if (err) {
         throw err
@@ -71,7 +72,7 @@ program.command('view')
   .option('-p, --port <port>', 'Set port. Defaults to 4000', '4000')
   .option('-c, --config [file]', 'The path to the sitepack.config.js file.', 'sitepack.config.js')
   .action(function (command) {
-    var serve = require('../scripts/view').default
+    var serve = require('../lib/scripts/view').default
     serve(getConfig(command))
   })
 

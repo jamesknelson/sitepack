@@ -27,7 +27,7 @@ export default function getPaths(packageRoot, siteRoot) {
     siteNodeModules: resolveSite(packageRoot, 'node_modules'),
 
     // this is empty with npm3 but node resolution searches higher anyway:
-    ownNodeModules: resolveOwn('../node_modules'),
+    ownNodeModules: resolveOwn('../../node_modules'),
     ownLoaders: resolveOwn('../loaders')
   }
 };
