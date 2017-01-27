@@ -1,6 +1,6 @@
 {
   "name": "sitepack",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Static website engine based on webpack",
   "author": "James K Nelson <james@jamesknelson.com>",
   "license": "MIT",

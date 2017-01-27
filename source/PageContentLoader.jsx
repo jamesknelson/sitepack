@@ -31,11 +31,11 @@ export default class PageContentLoader extends Component {
         (error) => {
           console.error("Error loading content with <Loader />:", error)
           if (this.id === page.id) {
-            this.setState({ isLoading: false, error })
+            this.setState({ isLoading: false, content: undefined, error })
           }
         }
       )
-      this.setState({ isLoading: true })
+      this.setState({ isLoading: true, content: undefined })
     }
     else {
       this.setState({ isLoading: false, content: page.content })
