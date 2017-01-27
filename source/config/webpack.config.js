@@ -1,23 +1,132 @@
 import path from 'path'
 import webpack from 'webpack'
 import HTMLWebpackPlugin from 'html-webpack-plugin'
+import ExtractTextPlugin from 'extract-text-webpack-plugin'
+import HTMLCustomWritePlugin from '../plugins/HTMLCustomWritePlugin.js'
 
-export default function getWebpackConfig({ isProduction, sitepackConfig, paths, host, port }) {
-  // TODO:
-  // - instead of randomly including bits from this, we should
-  //   clone it and modify the clone to add our settings
-  const configBase = sitepackConfig.getWebpackConfig({ isProduction })
 
+function getResolveConfig(paths) {
   return {
-    devtool: 'source-map',
+    resolve: {
+      fallback: paths.nodePaths,
+      
+      extensions: ['.js', '.json', '.jsx', ''],
 
+      alias: {
+        'react': path.resolve(paths.packageRoot, 'node_modules/react'),
+        'react-dom': path.resolve(paths.packageRoot, 'node_modules/react-dom'),
+        'sitepack': path.resolve(__dirname, '../index.js'),
+        'sitepack-config': paths.siteConfig,
+      },
+    },
+
+    resolveLoader: {
+      root: paths.ownNodeModules,
+      moduleTemplates: [
+        '*-loader'
+      ],
+      modulesDirectories: [
+        paths.ownLoaders,
+        'node_modules',
+      ],
+    },
+  }
+}
+
+function getLoaders({ getStyleLoader }) {
+  return [
+    // TODO: These should be defaults, somehow
+    { test: /SITE\.js$/,
+      loader: 'sitepack?site!babel',
+    },
+    { test: /\.js$/,
+      exclude: /node_modules|\.example\.js|\.SITE\.js$/,
+      loader: 'babel'
+    },
+    { test: /\.css$/,
+      loader: getStyleLoader('css'),
+    },
+
+    // TODO: These should be configurable by adding to the defaults
+    //       - instead of sitepack!module-and-source, there should be a sitepack-source loader package
+    //       - instead of sitepack!img!markdown, there should be a sitepack-markdown loader package
+    { test: /\.(gif|jpe?g|png|ico)$/,
+      loader: 'url?limit=4000'
+    },
+    { test: /\.example\.js$/,
+      loader: 'sitepack!module-and-source',
+    },
+    { test: /\.md$/,
+      loader: 'sitepack!img!markdown'
+    },
+    { test: /\.less$/,
+      loader: getStyleLoader('css!less'),
+    },
+  ]
+}
+
+
+export function getSiteConfig({ sitepackConfig, paths }) {
+  return {
     entry: {
       app: [
-        require.resolve('react-dev-utils/webpackHotDevClient'),
+        // Render the 
         path.join(paths.siteRoot, 'global.less'),
         require.resolve('./polyfills'),
-        path.join(__dirname, '../utils/main-web.js'),
+        require.resolve('../siteEntry'),
       ],
+    },
+
+    output: {
+      path: '/',
+      library: 'Junctions',
+      libraryTarget: 'commonjs2',
+      filename: `site-bundle.js`,
+    },
+
+    // Every non-relative module not prefixed with "sitepack-" is external
+    externals: function(context, request, callback) {
+        // Every module prefixed with "global-" becomes external
+        // "global-abc" -> abc
+        if(!/^sitepack/.test(request) && /^[a-z\-0-9][a-z\-0-9\/]+(\.[a-zA-Z]+)?$/.test(request)) {
+          return callback(null, request);
+        }
+        callback();
+    },
+
+    ...getResolveConfig(paths),
+
+    module: {
+      loaders: getLoaders({
+        getStyleLoader: str => ExtractTextPlugin.extract('style', str),
+      })
+    },
+
+    plugins: [
+      new ExtractTextPlugin('site-bundle.[contenthash:8].css'),
+    ],
+
+    sitepack: {
+      root: paths.packageRoot,
+      eagerByDefault: true,
+    },
+  }
+}
+
+export function getAppConfig({ isProduction, sitepackConfig, paths, writeWithAssets }) {
+  return {
+    devtool: isProduction ? false : 'source-map',
+
+    entry: {
+      app: 
+        (!isProduction
+          ? [require.resolve('react-dev-utils/webpackHotDevClient')]
+          : [])
+        .concat([
+          path.join(paths.siteRoot, 'global.less'),
+          require.resolve('./polyfills'),
+          require.resolve('../webEntry'),
+        ]),
       vendor: [ 'react', 'react-dom' ],
     },
 
@@ -28,75 +137,36 @@ export default function getWebpackConfig({ isProduction, sitepackConfig, paths, 
       publicPath: '/',
     },
 
-    plugins: [
-      new webpack.DefinePlugin({ 'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV) }),
-      new webpack.optimize.CommonsChunkPlugin('vendor', `vendor-[chunkHash].js`),
-      new HTMLWebpackPlugin({
-        template: paths.siteHTML,
-        page: { title: 'Sitepack' },
-        content: '',
-      })
-    ].concat(isProduction ? [
-      new webpack.optimize.DedupePlugin(),
-      new webpack.optimize.OccurrenceOrderPlugin(),
-      new webpack.optimize.UglifyJsPlugin()
-    ] : []),
-
-    resolve: {
-      fallback: paths.nodePaths,
-      
-      extensions: ['.js', '.json', '.jsx', ''],
-
-      alias: {
-        ...configBase.resolve.alias,
-        'react': path.resolve(paths.packageRoot, 'node_modules/react'),
-        'react-dom': path.resolve(paths.packageRoot, 'node_modules/react-dom'),
-        'sitepack': path.resolve(__dirname, '../utils/Sitepack.js'),
-        'sitepack-config': paths.siteConfig,
-      },
-    },
-
-    resolveLoader: {
-      root: paths.ownNodeModules,
-      modulesDirectories: [
-        paths.ownLoaders,
-      ]
-    },
+    ...getResolveConfig(paths),
 
     module: {
-      loaders: [
-        { test: /SITE\.js$/,
-          loader: 'sitepack?site!babel',
-        },
-        { test: /\.example\.js$/,
-          loader: 'sitepack!module-and-source',
-        },
-        { test: /\.js$/,
-          exclude: /node_modules|\.example\.js|\.SITE\.js$/,
-          loader: 'babel'
-        },
-        { test: /\.css$/,
-          loader: 'style!css'
-        },
-        { test: /\.less$/,
-          loader: 'style!css!less'
-        },
-        { test: /\.md$/,
-          loader: 'sitepack?preload!img!markdown'
-        },
-        { test: /\.(gif|jpe?g|png|ico)$/,
-          loader: 'url?limit=4000'
-        }
-      ]
+      loaders: getLoaders({
+        getStyleLoader: (str) => isProduction ? 'null' : 'style!'+str
+      })
     },
 
-    // Some libraries import Node modules but don't use them in the browser.
-    // Tell Webpack to provide empty mocks for them so importing them works.
-    node: {
-      fs: 'empty',
-      net: 'empty',
-      tls: 'empty'
-    },
+    plugins:
+      [
+        new webpack.DefinePlugin({ 'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV) }),
+        new webpack.optimize.CommonsChunkPlugin('vendor', `vendor-[chunkHash].js`),
+        new HTMLWebpackPlugin({
+          inject: false,
+          template: '!!sitepack-template!'+paths.siteHTML,
+          page: { title: 'Sitepack' },
+          content: '',
+        }),
+      ]
+      .concat(isProduction ? [
+        new webpack.optimize.DedupePlugin(),
+        new webpack.optimize.OccurrenceOrderPlugin(),
+        new webpack.optimize.UglifyJsPlugin(),
+      ] : [])
+      .concat(writeWithAssets
+        // Prevent HTMLWebpackPlugin from writing any HTML files to disk,
+        // as we'd like to handle that ourself
+        ? [new HTMLCustomWritePlugin(writeWithAssets)]
+        : []
+      ),
 
     sitepack: {
       root: paths.packageRoot,

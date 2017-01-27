@@ -1,19 +1,17 @@
 import chalk from 'chalk'
 import webpack from 'webpack'
 import WebpackDevServer from 'webpack-dev-server'
-import getWebpackConfig from '../config/webpack.config'
+import { getAppConfig } from '../config/webpack.config'
 import getPaths from '../config/paths'
 
 
-export default function start({ host, port, siteRoot, packageRoot, sitepackConfig }) {
+export default function start({ port, siteRoot, packageRoot, sitepackConfig }) {
   const paths = getPaths(packageRoot, siteRoot);
 
-  const config = getWebpackConfig({
+  const config = getAppConfig({
     isProduction: process.env.NODE_ENV === 'production',
     sitepackConfig,
     paths,
-    host,
-    port,
   })
 
   const compiler = webpack(config);

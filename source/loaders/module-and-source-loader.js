@@ -4,7 +4,7 @@ module.exports = function sourcedLoader(content) {
   this.cacheable()
   
   const moduleRequest = '!!babel!'+this.resourcePath
-  const sourceRequest = '!!prismjs-loader?lang=jsx!'+this.resourcePath
+  const sourceRequest = '!!prismjs?lang=jsx!'+this.resourcePath
 
   this.value = {
     meta: {},

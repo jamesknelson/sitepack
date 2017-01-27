@@ -70,10 +70,10 @@ program.command('view')
           defaultHost
          )
   .option('-p, --port <port>', 'Set port. Defaults to 4000', '4000')
-  .option('-c, --config [file]', 'The path to the sitepack.config.js file.', 'sitepack.config.js')
+  .option('-d, --directory [directory]', 'The path to the sitepack.config.js file.', 'site/build')
   .action(function (command) {
     var serve = require('../lib/scripts/view').default
-    serve(getConfig(command))
+    serve(command)
   })
 
 program.on('--help', function() {

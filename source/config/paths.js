@@ -8,21 +8,21 @@ function resolveOwn(relativePath) {
   return path.resolve(__dirname, relativePath);
 }
 
-export default function getPaths(packageRoot, siteRoot) {
+export default function getPaths(packageRoot, siteRoot, output) {
   var nodePaths = (process.env.NODE_PATH || '')
     .split(process.platform === 'win32' ? ';' : ':')
     .filter(Boolean)
     .filter(folder => !path.isAbsolute(folder))
     .map(resolveSite.bind(null, packageRoot));
 
-  return {
+  const paths = {
     packageRoot,
     siteRoot,
     nodePaths,
 
     siteConfig: resolveSite(siteRoot, 'sitepack.config.js'),
-    siteBuild: resolveSite(siteRoot, 'build'),
     sitePublic: resolveSite(siteRoot, 'public'),
+    siteBuild: resolveSite(packageRoot, output || 'build'),
     siteHTML: resolveSite(siteRoot, 'index.html.ejs'),
     siteNodeModules: resolveSite(packageRoot, 'node_modules'),
 
@@ -30,4 +30,6 @@ export default function getPaths(packageRoot, siteRoot) {
     ownNodeModules: resolveOwn('../../node_modules'),
     ownLoaders: resolveOwn('../loaders')
   }
+
+  return paths
 };

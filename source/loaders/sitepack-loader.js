@@ -17,6 +17,7 @@ module.exports = function sitepackLoader(content) {
   // this.cacheable()
   
   const relativePath = path.relative(this.options.sitepack.root, this.resourcePath)
+  const eagerByDefault = !!this.options.sitepack.eagerByDefault
   const id = JSON.stringify(createId(relativePath))
   const meta = JSON.stringify(this.inputValue && this.inputValue.meta ? this.inputValue.meta : {})
   
@@ -36,11 +37,11 @@ module.exports = function sitepackLoader(content) {
       .join('!')
   )
   
-  if (this.query === '?preload') {
-    return `module.exports = require('sitepack').wrap(${id}, ${meta}, ${JSON.stringify(relativePath)}, require(${contentRequest}))`
+  if (this.query === '?site') {
+    return `module.exports = require('sitepack').wrapSite(${id}, ${JSON.stringify(relativePath)}, require(${contentRequest}))`
   }
-  else if (this.query === '?site') {
-    return `module.exports = require('sitepack').wrap(${id}, require(${contentRequest}), ${JSON.stringify(relativePath)})`
+  else if (this.query === '?eager' || (eagerByDefault && this.query !== '?lazy')) {
+    return `module.exports = require('sitepack').wrapEagerContent(${id}, ${JSON.stringify(relativePath)}, ${meta}, require(${contentRequest}))`
   }
   else {
     return `
@@ -51,7 +52,7 @@ module.exports = function sitepackLoader(content) {
           })
         });
       }
-      module.exports = require('sitepack').wrap(${id}, ${meta}, ${JSON.stringify(relativePath)}, contentPromise)
+      module.exports = require('sitepack').wrapLazyContent(${id}, ${JSON.stringify(relativePath)}, ${meta}, contentPromise)
     `
   }
 }
