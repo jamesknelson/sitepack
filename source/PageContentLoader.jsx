@@ -51,7 +51,7 @@ export default class PageContentLoader extends Component {
       return this.props.render(this.state)
     }
     else {
-      return React.cloneElement(this.props.render, this.state)
+      return React.cloneElement(this.props.render, Object.assign({ key: this.props.page.id }, this.state))
     }
   }
 }
