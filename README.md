@@ -46,7 +46,7 @@ module.exports = {
 
 Sitepack will take the `SITE.js` file that is specified in your special `sitepack.config.js`, and then create a `site` object from it that holds an object representing your root page, and a list of all pages:
 
-```
+```js
 // Site object
 
 {
@@ -66,7 +66,7 @@ It will then pass your `site` object, as well as the current URL, into an `Appli
 
 This file must specify three functions:
 
-```
+```js
 // A function that returns your application's root React component
 export function getApplicationComponent() {
   return require('./Application').default
