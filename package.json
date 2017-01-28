@@ -1,6 +1,6 @@
 {
   "name": "sitepack",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Static website engine based on webpack",
   "author": "James K Nelson <james@jamesknelson.com>",
   "license": "MIT",
@@ -30,9 +30,7 @@
     "commander": "^2.9.0",
     "cross-env": "^3.1.4",
     "css-loader": "0.23.1",
-    "es6-templates": "^0.2.3",
     "extract-text-webpack-plugin": "^1.0.1",
-    "fastparse": "^1.1.1",
     "file-loader": "^0.9.0",
     "finalhandler": "^0.5.1",
     "front-matter": "^2.1.1",

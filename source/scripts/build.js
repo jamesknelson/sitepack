@@ -67,12 +67,12 @@ export default function build({ output, siteRoot, packageRoot, sitepackConfig })
       isProduction: true,
       sitepackConfig,
       paths,
-      writeWithAssets: assets => {
+      writeWithAssets: (assets, compilation) => {
         const pageIds = Object.keys(site.pages)
         for (let i = 0, len = pageIds.length; i < len; i++) {
           const id = pageIds[i]
           const page = site.pages[id]
-          
+
           let name = page.absolutePath.substr(1)
           if (page.index) name = path.join(name, 'index')
           name += '.html'
@@ -87,12 +87,22 @@ export default function build({ output, siteRoot, packageRoot, sitepackConfig })
             process.exit(1)
           }
 
+          const js = assets.js.slice(0)
+          if (page.contentId) {
+            const chunkName = page.contentId.substr(1).replace(/\.[a-zA-Z0-9]+$/, '').replace(/[^a-zA-Z0-9]+/g, '-')
+            const chunk = compilation.namedChunks[chunkName]
+            if (chunk) {
+              js.splice(1, 0, '/'+chunk.files[0])
+            }
+          }
+
           const template = _.template(fs.readFileSync(paths.siteHTML));
           const html = template({
             page: page,
             content: content,
             files: {
               ...assets,
+              js: js,
               css: assets.css.concat(['/'+cssFile]),
             }
           })

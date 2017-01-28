@@ -49,7 +49,7 @@ function getLoaders({ getStyleLoader }) {
 
     // TODO: These should be configurable by adding to the defaults
     //       - instead of sitepack!module-and-source, there should be a sitepack-source loader package
-    //       - instead of sitepack!img!markdown, there should be a sitepack-markdown loader package
+    //       - instead of sitepack!markdown, there should be a sitepack-markdown loader package
     { test: /\.(gif|jpe?g|png|ico)$/,
       loader: 'url?limit=4000'
     },
@@ -57,7 +57,7 @@ function getLoaders({ getStyleLoader }) {
       loader: 'sitepack!module-and-source',
     },
     { test: /\.md$/,
-      loader: 'sitepack!img!markdown'
+      loader: 'sitepack!markdown'
     },
     { test: /\.less$/,
       loader: getStyleLoader('css!less'),
@@ -79,6 +79,7 @@ export function getSiteConfig({ sitepackConfig, paths }) {
 
     output: {
       path: '/',
+      publicPath: '/',
       library: 'Junctions',
       libraryTarget: 'commonjs2',
       filename: `site-bundle.js`,
@@ -118,7 +119,7 @@ export function getAppConfig({ isProduction, sitepackConfig, paths, writeWithAss
     devtool: isProduction ? false : 'source-map',
 
     entry: {
-      app: 
+      entry: 
         (!isProduction
           ? [require.resolve('react-dev-utils/webpackHotDevClient')]
           : [])
@@ -132,7 +133,7 @@ export function getAppConfig({ isProduction, sitepackConfig, paths, writeWithAss
 
     output: {
       path: paths.siteBuild,
-      filename: `bundle-[chunkHash].js`,
+      filename: `[name]-[chunkHash].js`,
       chunkFileName: `[name]-[chunkHash].js`,
       publicPath: '/',
     },

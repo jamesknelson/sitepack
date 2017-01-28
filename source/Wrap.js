@@ -32,13 +32,16 @@ function wrap(type, id, pathname, meta, content) {
 
       if (page.content && typeof page.content.get == 'function') {
         Object.assign(page, contentFn.get(null, processors.slice(0), patterns.slice(0)))
+        page.contentId = page.id
+      }
+      else {
+        page.contentId = id 
       }
 
       page.parent = parent
-
+      page.id = id
       if (pages) {
-        page.id = id
-        page.relativePath = '/'+(page.path ? page.path : id.split('/').reverse()[0])
+        page.relativePath = '/'+(page.path ? page.path : id.replace(/\.[a-zA-Z\.]+$/, '').split('/').reverse()[0])
         page.absolutePath = joinPaths(page.parent && page.parent.absolutePath, page.relativePath)
       }
 
@@ -94,9 +97,38 @@ function wrap(type, id, pathname, meta, content) {
     initialize: function(processor) {
       const pages = {}
       const processors = [processor]
+      const rootPage = api.get(pages, processors)
+
+      // Content may sometimes need to be modified based on information stored
+      // in the site tree. For example, rewriting links from a format which
+      // points to files on the filesystem, to actual URLs.
+      const pageIds = Object.keys(pages)
+      for (let i = 0; i < pageIds.length; i++) {
+        const page = pages[pageIds[i]]
+
+        if (typeof page.content === 'function') {
+          if (!page.content.__SITEPACK_PROMISE) {
+            page.content = page.content(page, pages)
+          }
+          else {
+            const originalFn = page.content
+            page.content = function(...args) {
+              return originalFn(...args).then(content => {
+                if (typeof content === 'function') {
+                  return content(page, pages)
+                }
+                else {
+                  return content
+                }
+              })
+            }
+          }
+        }
+      }
+
       return {
         pages: pages,
-        root: api.get(pages, processors),
+        root: rootPage,
       }
     },
   }
