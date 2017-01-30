@@ -1,4 +1,6 @@
-import './loadServiceWorker'
+//Disable this until I find a way to disable any caching of the service worker itself
+//import './loadServiceWorker'
+
 import createBrowserHistory from 'history/createBrowserHistory'
 import React from 'react'
 import ReactDOM from 'react-dom'
