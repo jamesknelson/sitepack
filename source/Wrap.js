@@ -107,14 +107,14 @@ function wrap(type, id, pathname, meta, content) {
         const page = pages[pageIds[i]]
 
         if (typeof page.content === 'function') {
-          if (!page.content.__SITEPACK_PROMISE) {
+          if (page.content.__SITEPACK_POST_PROCESSOR) {
             page.content = page.content(page, pages)
           }
-          else {
+          else if (page.content.__SITEPACK_PROMISE) {
             const originalFn = page.content
             page.content = function(...args) {
               return originalFn(...args).then(content => {
-                if (typeof content === 'function') {
+                if (typeof content === 'function' && content.__SITEPACK_POST_PROCESSOR) {
                   return content(page, pages)
                 }
                 else {
@@ -122,6 +122,7 @@ function wrap(type, id, pathname, meta, content) {
                 }
               })
             }
+            page.content.__SITEPACK_PROMISE = true
           }
         }
       }

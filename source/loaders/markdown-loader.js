@@ -2,24 +2,19 @@ import url from 'url'
 import path from 'path'
 import loaderUtils from 'loader-utils'
 import frontMatter from 'front-matter'
-import markdownIt from 'markdown-it'
 import mdAnchor from 'markdown-it-anchor'
 import Prism from 'prismjs'
+import MDXIt from 'mdx-it'
+
+
+const env = {};
+
 
 const aliases = {
   'js': 'jsx',
   'html': 'markup'
 }
-
-// Used to store information that the markdown plugins need to return to
-// the loader itself
-const env = {
-  title: undefined,
-  links: [],
-  images: [],
-}
-
-const highlight = (str, lang) => {
+function highlight(str, lang) {
   if (!lang) {
     return str
   } else {
@@ -33,7 +28,8 @@ const highlight = (str, lang) => {
   }
 }
 
-const mdTitleExtractor = (md) => {
+
+function mdTitleExtractor(md) {
   md.core.ruler.push('titleExtractor', state => {
     const tokens = state.tokens
 
@@ -51,41 +47,8 @@ const mdTitleExtractor = (md) => {
   })
 }
 
-
-function saveLink(href) {
-  const number = env.links.length
-  env.links.push(href)
-  return "%%%SITEPACK_LINK%%%" + Math.random() + "%%%" + (number) + "%%%";
-}
-const mdLinkReplacer = (md) => {
-  md.core.ruler.push('linkReplacer', state => {
-    function applyFilterToTokenHierarchy(token) {
-      if (token.children) {
-        token.children.map(applyFilterToTokenHierarchy);
-      }
-
-      if (token.type === 'link_open') {
-        const href = token.attrGet('href')
-
-        if (href.indexOf('://') !== -1 || href[0] == '#') return;
-
-        const id = saveLink(href);
-        token.attrSet('href', id);
-      }
-    }
-
-    state.tokens.map(applyFilterToTokenHierarchy);
-  })
-}
-
-
-function saveImage(src) {
-  const number = env.images.length
-  env.images.push(src)
-  return "%%%SITEPACK_IMAGE%%%" + Math.random() + "%%%" + (number) + "%%%";
-}
-const mdImageReplacer = (md) => {
-  md.core.ruler.push('imageReplacer', state => {
+function mdImageReplacer(md) {
+  md.core.ruler.push('imageReplacer', function(state) {
     function applyFilterToTokenHierarchy(token) {
       if (token.children) {
         token.children.map(applyFilterToTokenHierarchy);
@@ -96,10 +59,9 @@ const mdImageReplacer = (md) => {
 
         if(!loaderUtils.isUrlRequest(src)) return;
 
-        var uri = url.parse(src);
+        const uri = url.parse(src);
         uri.hash = null;
-        const id = saveImage(uri.format());
-        token.attrSet('src', id);
+        token.attrSet('src', { __jsx: 'require("'+uri.format()+'")' });
       }
     }
 
@@ -107,69 +69,65 @@ const mdImageReplacer = (md) => {
   })
 }
 
+function mdLinkReplacer(sitepackRoot, resourcePath) {
+  return (md) => {
+    md.core.ruler.push('linkReplacer', function(state) {
+      function applyFilterToTokenHierarchy(token) {
+        if (token.children) {
+          token.children.map(applyFilterToTokenHierarchy);
+        }
 
-const md = markdownIt({
-  html: true,
-  linkify: true,
-  typographer: true,
-  highlight
-})
-  .enable([ 'link' ])
-  .use(mdImageReplacer)
-  .use(mdLinkReplacer)
-  .use(mdTitleExtractor)
-  .use(mdAnchor, {
-    permalink: true,
-    permalinkSymbol: '#',
-    permalinkBefore: true
-  })
+        if (token.type === 'link_open') {
+          const href = token.attrGet('href');
+
+          if (href.indexOf('://') !== -1 || href[0] == '#') return;
+
+          const absoluteHref =
+            href[0] === '/'
+              ? href
+              : '/' + path.relative(sitepackRoot, path.join(resourcePath, '..', href))
+
+          token.attrSet('href', absoluteHref);
+        }
+      }
+
+      state.tokens.map(applyFilterToTokenHierarchy);
+    })
+  }
+}
+
 
 module.exports = function markdownLoader(content) {
-  // Not cacheable due to metadata
-  // this.cacheable()
-  
-  const data = frontMatter(content)
+  this.cacheable();
 
-  env.title = undefined
-  env.images = []
-  env.links = []
+  const options = loaderUtils.parseQuery(this.query);
 
-  // This will run the plugins defined above, which store information in the
-  // global `env` variable.
-  const html = JSON.stringify(md.render(data.body))
+  if (options.linkify === undefined) options.linkify = true;
+  if (options.typographer === undefined) options.typographer = true;
+  if (options.highlight === undefined) options.highlight = highlight;
 
-  const body = html
-    .replace(/%%%SITEPACK_IMAGE%%%[0-9\.]+%%%([0-9]+)%%%/g, (_, match) => {
-      const src = env.images[match]
-      
-      if(!src) return ''
+  const md =
+    new MDXIt(options)
+      .enable(['link'])
+      .use(mdImageReplacer)
+      .use(mdLinkReplacer(this.options.sitepack.root, this.resourcePath))
+      .use(mdTitleExtractor)
+      .use(mdAnchor);
 
-      return '" + require(' + JSON.stringify(loaderUtils.urlToRequest(src)) + ') + "';
-    })
-    .replace(/%%%SITEPACK_LINK%%%[0-9\.]+%%%([0-9]+)%%%/g, (_, match) => {
-      const href = env.links[match]
-      
-      if(!href) return ''
-
-      const absoluteUrl =
-        href[0] === '/'
-          ? href
-          : '/' + path.relative(this.options.sitepack.root, path.join(this.resourcePath, '..', href))
-
-      return '%%%SITEPACK_LINK%%%' + absoluteUrl + '%%%END_SITEPACK_LINK%%%'
-    })
-
+  const data = frontMatter(content);
+  const body = md.render(data.body, env);
 
   // Pass metadata to Sitepack by setting it on the loader's `value`
   const meta = data.attributes
   if (!meta.title) {
     meta.title = env.title 
   }
-  this.value = {
-    meta: meta,
-  }
 
-  return `
-    module.exports = require('sitepack').markdownPostProcessor(${body});
-  `;
+  // Make the plain body and meta available to the next loader
+  this.value = { meta, body };
+
+  return `${this.value.body}
+module.exports = require('sitepack').markdownPostProcessor(module.exports);
+module.exports.meta = ${JSON.stringify(this.value.meta, null, 2)}
+`;
 }

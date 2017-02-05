@@ -56,8 +56,8 @@ function getLoaders({ getStyleLoader }) {
     { test: /\.example\.js$/,
       loader: 'sitepack!module-and-source',
     },
-    { test: /\.md$/,
-      loader: 'sitepack!markdown'
+    { test: /\.mdx?$/,
+      loader: 'sitepack!markdown?es5'
     },
     { test: /\.less$/,
       loader: getStyleLoader('css!less'),

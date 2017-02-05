@@ -7,7 +7,10 @@ export default class PageContentLoader extends Component {
       id: PropTypes.string.isRequired,
       content: PropTypes.any,
     }).isRequired,
-    render: PropTypes.element.isRequired,
+    render: PropTypes.oneOfType([
+      PropTypes.element,
+      PropTypes.func,
+    ]).isRequired,
   }
 
   componentWillMount() {
@@ -21,7 +24,7 @@ export default class PageContentLoader extends Component {
   setPageState(page) {
     this.id = page.id
 
-    if (typeof page.content == 'function') {
+    if (typeof page.content == 'function' && page.content.__SITEPACK_PROMISE) {
       page.content().then(
         (content) => {
           if (this.id === page.id) {
