@@ -5,19 +5,26 @@ import { getAppConfig } from '../config/webpack.config'
 import getPaths from '../config/paths'
 
 
-export default function start({ port, siteRoot, packageRoot, sitepackConfig }) {
-  const paths = getPaths(packageRoot, siteRoot);
+export default function start({ port, siteRoot, packageRoot, config }) {
+  const paths = getPaths(packageRoot, siteRoot, config.paths);
 
-  const config = getAppConfig({
-    isProduction: process.env.NODE_ENV === 'production',
-    sitepackConfig,
+  const webpackConfig = getAppConfig({
+    environment: process.env.NODE_ENV,
+    config,
     paths,
   })
 
-  const compiler = webpack(config);
+  let compiler
+  try {
+    compiler = webpack(webpackConfig);
+  }
+  catch (e) {
+    console.error(e.message)
+    process.exit(1)
+  }
 
   const devServer = new WebpackDevServer(compiler, {
-    contentBase: paths.sitePublic,
+    contentBase: paths.public,
 
     historyApiFallback: true,
 
@@ -25,7 +32,7 @@ export default function start({ port, siteRoot, packageRoot, sitepackConfig }) {
 
     // It is important to tell WebpackDevServer to use the same "root" path
     // as we specified in the config. In development, we always serve from /.
-    publicPath: config.output.publicPath
+    publicPath: webpackConfig.output.publicPath
   });
 
   devServer.listen(port, (err, result) => {

@@ -1,9 +1,25 @@
-// These functions are called by the wrapper code added by the sitepack loader
-export { wrapSite, wrapEagerContent, wrapLazyContent } from './Wrap'
+export { createPage, isPage } from './Page'
+export { createSite, createSiteTransformer } from './Site'
 
-// This is an optional component which can be used by sites to handle
-// loading of lazy content
-export { default as PageContentLoader } from './PageContentLoader'
+import { Page } from './Page'
 
-// Rewrites URLs within markdown from source tree format to web format
-export { default as markdownPostProcessor } from './loaders/markdown-post-processor'
+import addDefaultsById from './transforms/addDefaultsById'
+import addDefaultsByPattern from './transforms/addDefaultsByPattern'
+import consume from './transforms/consume'
+import consumeByMap from './transforms/consumeByMap'
+
+export const Transforms = {
+  addDefaultsById,
+  addDefaultsByPattern,
+  consume,
+  consumeByMap
+}
+
+
+export function isContentGetter(obj) {
+  return typeof obj === 'function' && obj.__SITEPACK_CONTENT_GETTER
+}
+export function createContentGetter(func) {
+  Object.defineProperty(func, '__SITEPACK_CONTENT_GETTER', { value: true })
+  return func
+}

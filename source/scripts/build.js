@@ -3,27 +3,28 @@ import chalk from 'chalk'
 import webpack from 'webpack'
 import path from 'path'
 import createMemoryHistory from 'history/createMemoryHistory'
-import ReactDOMServer from 'react-dom/server'
-import React from 'react'
 import requireFromString from 'require-from-string'
 import fs from 'fs-extra'
 import MemoryFS from 'memory-fs'
-import swPrecache from 'sw-precache'
 import { getAppConfig, getSiteConfig } from '../config/webpack.config'
 import getPaths from '../config/paths'
+import getChunkNameForId from '../utils/getChunkNameForId'
+import getContentIdForPage from '../utils/getContentIdForPage'
 
 
 
-export default function build({ output, siteRoot, packageRoot, sitepackConfig }) {
-  const paths = getPaths(packageRoot, siteRoot, output);
+export default function build({ output, siteRoot, packageRoot, config }) {
+  const paths = getPaths(packageRoot, siteRoot, config.paths, output);
+  const renderToStringModule = require(paths.renderToString);
+  const renderToString = typeof renderToStringModule == 'function' ? renderToStringModule : renderToStringModule.default
 
-  const config = getSiteConfig({
-    isProduction: true,
-    sitepackConfig,
-    paths,
-  })
+  if (typeof renderToString !== 'function') {
+    throw new Error(`Your "renderToString" file at ${paths.renderToString} did not export a default function.`)
+  }
 
-  const compiler = webpack(config);
+  const webpackConfig = getSiteConfig({ config, paths })
+
+  const compiler = webpack(webpackConfig);
   const memoryFS = new MemoryFS()
 
   console.log('Generating site data...')
@@ -37,6 +38,7 @@ export default function build({ output, siteRoot, packageRoot, sitepackConfig })
     console.log('Loading site data...')
 
     const fileContent = memoryFS.readFileSync("/site-bundle.js").toString('utf8');
+    
     const site = requireFromString('var window = {}; '+fileContent, path.join(packageRoot, 'site-bundle.js')).default;
 
     let cssFile;
@@ -54,7 +56,7 @@ export default function build({ output, siteRoot, packageRoot, sitepackConfig })
       }
 
       console.log(`Creating "${name}"...`)
-      const pathname = path.join(paths.siteBuild, name)
+      const pathname = path.join(paths.output, name)
       fs.ensureDirSync(path.dirname(pathname))
       fs.writeFileSync(pathname, memoryFS.readFileSync('/'+name))
     }
@@ -63,9 +65,9 @@ export default function build({ output, siteRoot, packageRoot, sitepackConfig })
     copyPublicFolder(paths);
 
     console.log('Generating app scripts...')
-    const config = getAppConfig({
-      isProduction: true,
-      sitepackConfig,
+    const webpackConfig = getAppConfig({
+      environment: 'production',
+      config,
       paths,
       writeWithAssets: (assets, compilation) => {
         const pageIds = Object.keys(site.pages)
@@ -73,81 +75,65 @@ export default function build({ output, siteRoot, packageRoot, sitepackConfig })
           const id = pageIds[i]
           const page = site.pages[id]
 
-          let name = page.absolutePath.substr(1)
-          if (page.index) name = path.join(name, 'index')
-          name += '.html'
-          console.log(`Creating "${name}"...`)
-          let content
-          try {
-            content = renderToString(sitepackConfig, site, page.absolutePath)
-          }
-          catch (err) {
-            console.error(chalk.red("Could not render HTML"))
-            console.error(err)
-            process.exit(1)
-          }
+          if (page.absolutePath) {
+            let name = page.absolutePath.substr(1)
+            if (page.children) name = path.join(name, 'index')
+            name += '.html'
+            console.log(`Creating "${name}"...`)
+            let content
+            try {
+              const history = createMemoryHistory({
+                initialEntries: [ page.absolutePath ],
+              })
 
-          const js = assets.js.slice(0)
-          if (page.contentId) {
-            const chunkName = page.contentId.substr(1).replace(/\.[a-zA-Z0-9]+$/, '').replace(/[^a-zA-Z0-9]+/g, '-')
+              content = renderToString({ site, history })
+            }
+            catch (err) {
+              console.error(chalk.red("Could not render HTML"))
+              console.error(err)
+              process.exit(1)
+            }
+
+            const js = assets.js.slice(0)
+            const contentId = getContentIdForPage(page)
+            const chunkName = getChunkNameForId(contentId)
             const chunk = compilation.namedChunks[chunkName]
             if (chunk) {
               js.splice(1, 0, '/'+chunk.files[0])
             }
+
+            const template = _.template(fs.readFileSync(paths.html));
+            const html = template({
+              page: page,
+              content: content,
+              files: {
+                ...assets,
+                js: js,
+                css: assets.css.concat(['/'+cssFile]),
+              }
+            })
+
+            const pathname = path.join(paths.output, name)
+            fs.ensureDirSync(path.dirname(pathname))
+            fs.writeFileSync(pathname, html)
           }
-
-          const template = _.template(fs.readFileSync(paths.siteHTML));
-          const html = template({
-            page: page,
-            content: content,
-            files: {
-              ...assets,
-              js: js,
-              css: assets.css.concat(['/'+cssFile]),
-            }
-          })
-
-          const pathname = path.join(paths.siteBuild, name)
-          fs.ensureDirSync(path.dirname(pathname))
-          fs.writeFileSync(pathname, html)
         }
       }
     })
-    const compiler = webpack(config);
+    const compiler = webpack(webpackConfig);
 
     compiler.run((err, stats) => {
       if (err) {
         return console.log(err);
       }
-
-      swPrecache.write(`${paths.siteBuild}/service-worker.js`, {
-        staticFileGlobs: [paths.siteBuild + '/**/*.{js,html,css,png,jpg,gif,svg,eot,ttf,woff}'],
-        stripPrefix: paths.siteBuild
-      });
     })
   })
-}
-
-
-function renderToString(sitepackConfig, site, path) {
-  const Application = sitepackConfig.getApplicationComponent()
-
-  const history = createMemoryHistory({
-    initialEntries: [ path ],
-  })
-
-  return ReactDOMServer.renderToString(
-    React.createElement(Application, {
-      history: history,
-      site: site,
-    })
-  )
 }
 
 
 function copyPublicFolder(paths) {
-  fs.copySync(paths.sitePublic, paths.siteBuild, {
+  fs.copySync(paths.public, paths.output, {
     dereference: true,
-    filter: file => file !== paths.siteHTML
+    filter: file => file !== paths.html
   });
 }

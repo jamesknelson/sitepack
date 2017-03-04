@@ -18,15 +18,15 @@ var defaultHost = process.platform === 'win32'
 
 function getConfig(command) {
   const configPath = path.resolve(packageRoot, command.config)
+  const configModule = require(configPath)
+  const config = typeof configModule === 'function' ? configModule : configModule.default
 
   return assign({}, command, {
     packageRoot: packageRoot,
     siteRoot: path.dirname(configPath),
-    sitepackConfig: require(configPath),
+    config: config({ environment: process.env.NODE_ENV }),
   })
 }
-
-var siteDirectory = fs.realpathSync(process.cwd());
 
 
 program
