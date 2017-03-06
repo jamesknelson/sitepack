@@ -75,6 +75,12 @@ export class Page {
 
 
 export function createPage(id, options, content) {
+  const optionKeys = Object.keys(options)
+  if (optionKeys.length === 1 && optionKeys[0] === "default") {
+    // We've probably received an ES6 module with a default export
+    options = options.default
+  }
+
   if (content && 'content' in options) {
     warning(`You specified a "content" option for page ${id}, but it already has content! Using your specified content anyway...`)
   }
