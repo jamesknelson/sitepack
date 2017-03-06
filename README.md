@@ -7,7 +7,7 @@
 The **sitepack-react-starter-kit** contains a simple React-based project that is built with Sitepack. To try it out:
 
 ```bash
-git clone sitepack-react-starter-kit
+git clone https://github.com/jamesknelson/sitepack.git
 cd sitepack-react-starter-kit
 yarn install
 yarn start
