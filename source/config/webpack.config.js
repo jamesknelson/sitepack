@@ -176,7 +176,7 @@ export function getAppConfig({ config, environment, paths, writeWithAssets }) {
 
     output: {
       path: paths.output,
-      pathinfo: true,
+      pathinfo: !isProduction,
       filename: `[name]-[chunkHash].js`,
       chunkFilename: `[name]-[chunkHash].js`,
       publicPath: '/',

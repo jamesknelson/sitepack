@@ -1,89 +1,128 @@
 # Sitepack
 
-*Sitepack is currently a protoype, and not yet properly documented.*
+*A JavaScript tool for building static web sites.*
 
-Sitepack is a tool for building hybrid websites with React and Webpack. It gives you the full power of React to build your application, while also giving you out-of-the-box support for static rendering. With Sitepack, you get the best of both worlds!
+## How To Jump In The Deep End
 
-## Example
+The **sitepack-react-starter-kit** contains a simple React-based project that is built with Sitepack. To try it out:
 
-To see Sitepack in the wild, check out the `site` directory of the [Junctions](https://github.com/jamesknelson/junctions/tree/master/site) router project. This site can be viewed live at [junctions.js.org](https://junctions.js.org).
+```bash
+git clone sitepack-react-starter-kit
+cd sitepack-react-starter-kit
+yarn install
+yarn start
+```
 
-## Overview
+Open up a browser at <http://localhost:4000>, and you should see "Welcome to Sitepack"!
 
-Sitepack is based around three assumptions:
+Here are a few things you can try:
 
-1. Your site's structure and metadata can be represented as a single JavaScript object
-2. Your content can be lazy or eager loaded based on information in this object
-3. Given a URL and this `Site` object, a single React component can render your application
+1. Editing `/content/index-content.md` and saving should automatically reload the page
+2. Change `/source/wrappers/Site.js` to change the website's title or navigation
+3. Add a new Markdown page and `require()` it in `/content/index.page.js`
+4. Build the site to the `/build` directory with `yarn build`
 
-Sitepack provides tools to create static-rendered websites which follows these assumptions, including:
+To learn more, you can see the documentation for [sitepack-react-starter-kit](https://github.com/jamesknelson/sitepack-react-starter-kit).
 
-1. **`SITE.js` files:** A format to specify structure and metadata using plain JavaScript objects and `require()` statements
-2. **`sitepack.config.js` files:** A format to provide global configuration for your site
-3. **The `sitepack` command:** A command line utility to build and serve a site
+## The Power Of Webpack, Without The Pain
 
-### SITE.js files
+Sitepack configures [webpack](https://webpack.js.org) so that you don't have to. Out of the box, a sitepack app gets:
 
-Sitepack is based around `SITE.js` files. These files let you specify the structure and metadata of your site using modules and `require()` statements. Here is an example of a `SITE.js` file from the [Junctions JS website](https://github.com/jamesknelson/junctions/tree/master/docs):
+- Static HTML files for each Page you define
+- Reload-on-change during development
+- Source maps
+- Minified JavaScript
+
+But Sitepack still gives you the power of Webpack loaders. This gives you options:
+
+- Build CSS from LESS or SASS
+- Use `.vue` files for Vue-baed apps
+- Convert Markdown files to React components using MDX
+
+## Your Site Is An Object
+
+Sitepack treats your entire Site as an object. It also treats each Page as an object. But where do these objects come from?
+
+### Declaring Pages
+
+The easiest way to get a Page object is to just create one. You'd usually do this by exporting it from a `.page.js` file within your `content` directory. For example, your site's root page may be called `index.page.js`:
 
 ```js
-// SITE.js
-
-module.exports = {
-  title: 'Guide',
-  path: 'guide',
-  indexWrapper: 'MenuWrapper',
-  content: require('./quick-start.md'),
-  index: [
-      require('./quick-start.md'),
-      require('./introduction/SITE.js'),
-      require('./basics/SITE.js'),
-      require('./advanced/SITE.js'),
-      require('./Glossary.md'),
-  ],
+export default {
+  title: "junctions.js",
+  content: require('./index-content.md'),
+  children: [
+    require('./pages/guide.md'),
+    require('./pages/api.md'),
+  ]
 }
 ```
 
-Sitepack will take the `SITE.js` file that is specified in your special `sitepack.config.js`, and then create a `site` object from it that holds an object representing your root page, and a list of all pages:
+Each Page object contains all of the information that is needed to render that page. This will usually include a `title` and some `content`. A `path` will also be added if you don't specify it manually.
+
+In addition to a page's content, it can also specify *children*. Children are Page objects too. They'll be made available at a URL relative to the Page that includes them. Which brings us to one of the major differences between Sitepack and other static website generators.
+
+Sitepack doesn't attempt to magic your content out of the filesystem and into a website. Instead, Sitepack follows `require()` statements, building exactly what you tell it to build. Your Site is a tree of Page objects. That's it.
+
+But how is it that you can `require` an `.md` file, and you get a `Page` object? This is where Page Loaders come in.
+
+### Page Loaders
+
+Sitepack also gives you a powerful new tool called **Page Loaders** -- a special type of Webpack Loader that converts a content file into a `Page` object.
+
+If you're not familiar with Webpack, all you need to know about loaders is that they let Sitepack *transform* the content of a file loaded with `require()`. In the case of Page Loaders, content is transformed into a `Page` object. For an example, the [sitepack-mdx-page-loader](https://github.com/jamesknelson/sitepack-mdx-page-loader) package contains a loader that turns Markdown into React components.
+
+## Use Whichever Framework You'd Like
+
+Sitepack is compatible with any JavaScript framework that knows how to render a Component to a string. This means that is Sitepack works with both [React JS](https://facebook.github.io/react/) *and* [Vue JS](https://vuejs.org/).
+
+But how does Sitepack work this magic? Well, it actually isn't magical at all! You just need to tell Sitepack how to render your application to a string. And this is easier than it might at first sound. But don't take my word for it -- let's look at an example.
+
+### Sitepack with React
+
+React provides a [ReactDOMServer.renderToString()](https://facebook.github.io/react/docs/react-dom-server.html#rendertostring) function takes a React Element, and returns a string containing the element's HTML.
+
+To use this within Sitepack, just create a `renderToString.js` file in the same directory as `sitepack.config.js` that looks something like this:
 
 ```js
-// Site object
+import React from 'react'
+import ReactDOMServer from 'react-dom/server'
+import { Router } from 'sitepack-react'
 
-{
-  root: {
-    id: '/pathname/of/source/file',
-    ...
-  },
-  pages: {
-    [id]: Page,
-  }
+export default function renderToString({ history, site }) {
+  return ReactDOMServer.renderToString(
+    <Router history={history} site={site} />
+  )
 }
 ```
 
-It will then pass your `site` object, as well as the current URL, into an `Application` component which you configure in `sitepack.config.js`.
-
-## sitepack.config.js
-
-This file must specify three functions:
+And then create a `main.js` file in the same directory that looks something like this:
 
 ```js
-// A function that returns your application's root React component
-export function getApplicationComponent() {
-  return require('./Application').default
-}
+import React from 'react'
+import ReactDOM from 'react-dom'
+import { Router } from 'sitepack-react'
 
-// A function that returns your applicaion's root `SITE.js` file
-export function getRootSite() {
-  return require('../SITE.js')
-}
-
-// A function that can add extra information to each Page object.
-// This function can just return the page as-is.
-export function configurePage(page) {
-  return page;
+export default function main({ environment, history, site }) {
+  ReactDOM.render(
+    <Router history={history} site={site} />,
+    document.getElementById('app')
+  )
 }
 ```
 
-## The `sitepack` command
+Sitepack expects your `renderToString.js` file's default export to be a function that takes an object containing your `history` and `site`, and returns a string. And it runs the default export of `main.js` as soon as your page loads.
 
-TODO
+The `site` object contains your application's `Page` objects. Your entire site's content is available from here. All you need to do is select that relevant part for the current page and then display it. But how do you know what the current page is? That is where `history` comes in.
+
+The `history` object is a `History` object from the [history](https://github.com/mjackson/history) package. It contains the URL of the page to render. You can pass this object as-is to [react-router](https://github.com/ReactTraining/react-router) or [junctions](https://junctions.js.org), or you can pass it to a `<Router>` element from **sitepack-react**.
+
+Sitepack gives you the flexibility to use any component you'd like to handle `history` and `site`. But sometimes you'd just like to focus on your content. And that's what [sitepack-react](https://github.com/jamesknelson/sitepack-react) is for; it is a set of Components and tools that you can use to make integrating Sitepack with React a breeze.
+
+But say you *actually* want to build a static website using React. I'll let you in on a secret. You don't actually need to touch History, Site or Router objects. They're there if need them, but you probably just want to clone [sitepack-react-starter-kit](https://github.com/jamesknelson/sitepack-react-starter-kit) and start editing your `content` directory. *It is really that simple.*
+
+## Sitepack with Vue
+
+Vue also supports rendering to string.
+
+**TODO**
