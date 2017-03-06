@@ -7,7 +7,7 @@
 The **sitepack-react-starter-kit** contains a simple React-based project that is built with Sitepack. To try it out:
 
 ```bash
-git clone https://github.com/jamesknelson/sitepack.git
+git clone https://github.com/jamesknelson/sitepack-react-starter-kit.git
 cd sitepack-react-starter-kit
 yarn install
 yarn start
@@ -17,8 +17,8 @@ Open up a browser at <http://localhost:4000>, and you should see "Welcome to Sit
 
 Here are a few things you can try:
 
-1. Editing `/content/index-content.md` and saving should automatically reload the page
-2. Change `/source/wrappers/Site.js` to change the website's title or navigation
+1. Editing `/content/home.md` and saving should automatically reload the page
+2. Change `/source/wrappers/SiteWrapper.js` to change the website's title or navigation
 3. Add a new Markdown page and `require()` it in `/content/index.page.js`
 4. Build the site to the `/build` directory with `yarn build`
 
