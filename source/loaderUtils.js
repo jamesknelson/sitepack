@@ -15,7 +15,7 @@ export function loadPageWithContent(loader, options, moduleContentsAsString) {
     return moduleContentsAsString
   }
   else {
-    loader.clearDependencies()
+    //loader.clearDependencies()
 
     const id = '/'+path.relative(loaderOptions.sitepack.packageRoot, loader.resourcePath)
     const eagerByDefault = loaderOptions.sitepack.environment === 'static'

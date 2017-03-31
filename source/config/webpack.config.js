@@ -213,5 +213,11 @@ export function getAppConfig({ config, environment, paths, writeWithAssets }) {
         ? [new HTMLCustomWritePlugin(writeWithAssets)]
         : []
       ),
+
+    node: {
+      fs: "empty",
+      module: "empty",
+      net: "empty",
+    },
   }
 }

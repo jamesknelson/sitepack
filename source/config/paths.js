@@ -24,7 +24,7 @@ export default function getPaths(packageRoot, siteRoot, configPaths, output) {
     loaders: resolveSite(siteRoot, configPaths.loaders || 'loaders'),
     main: resolveSite(siteRoot, configPaths.main || 'main.js'),
     nodeModules: resolveSite(packageRoot, 'node_modules'),
-    output: resolveSite(siteRoot, output || configPaths.output || 'build'),
+    output: resolveSite(packageRoot, output || configPaths.output || 'build'),
     public: resolveSite(siteRoot, configPaths.public || 'public'),
     renderToString: resolveSite(siteRoot, configPaths.renderToString || 'renderToString.js'),
     createSite: resolveSite(siteRoot, configPaths.site || 'createSite.js'),
