@@ -1,6 +1,6 @@
 {
   "name": "sitepack",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Static website engine based on webpack",
   "author": "James K Nelson <james@jamesknelson.com>",
   "license": "MIT",
@@ -15,13 +15,13 @@
     "prepublish": "npm run clean && npm run build"
   },
   "dependencies": {
-    "babel-core": "^6.22.1",
+    "babel-core": "^6.24.0",
     "babel-loader": "^6.2.10",
     "babel-plugin-transform-class-properties": "^6.22.0",
     "babel-plugin-transform-object-rest-spread": "^6.22.0",
     "babel-preset-latest": "^6.22.0",
     "babel-preset-react": "^6.22.0",
-    "babel-register": "^6.22.0",
+    "babel-register": "^6.24.0",
     "chalk": "^1.1.3",
     "commander": "^2.9.0",
     "css-loader": "^0.23.1",
