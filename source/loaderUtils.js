@@ -15,8 +15,6 @@ export function loadPageWithContent(loader, options, moduleContentsAsString) {
     return moduleContentsAsString
   }
   else {
-    //loader.clearDependencies()
-
     const id = '/'+path.relative(loaderOptions.sitepack.packageRoot, loader.resourcePath)
     const eagerByDefault = loaderOptions.sitepack.environment === 'static'
     const stringifiedId = JSON.stringify(id)
@@ -34,6 +32,11 @@ export function loadPageWithContent(loader, options, moduleContentsAsString) {
       // loaders used to compile it.
       const contentRequest = stringifyRequest(loader,
         '!!' +
+        loader.loaders
+          .slice(0, loader.loaderIndex)
+          .map(loader => loader.request)
+          .join('!') +
+        '!' +
         loader.loaders[loader.loaderIndex].path + '?'+nextLoaderOptions+'!' +
         loader.loaders
           .slice(loader.loaderIndex + 1)
