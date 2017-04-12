@@ -54,7 +54,7 @@ function transformLoaders(environment, packageRoot, loaders, extract) {
           use: ["css"].concat(transformLoaders(environment, packageRoot, loaders.slice(i))),
         })
       }
-      else if (environment === 'development') {
+      else if (environment !== 'production') {
         transformed.push('style', { ...loader, loader: 'css'})
       }
       else {
@@ -151,6 +151,14 @@ export function getSiteConfig({ config, paths }) {
     },
 
     plugins: [
+      // The site bundle will only ever be run by the build system, and the
+      // build system fails on Webpack's dynamic import implementation.
+      // Setting this ensures there will be no dynamic imports, so the build
+      // will work.
+      new webpack.optimize.LimitChunkCountPlugin({
+          maxChunks: 1
+      }),
+
       extract
     ],
   }

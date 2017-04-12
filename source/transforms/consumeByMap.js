@@ -9,5 +9,14 @@ export default function consumeByMap(key, getter) {
     throw new Error('Expected the second argument to Transforms.consumeByMap to be a function.')
   }
 
-  return site => site.map(page => page.consume(key).override({ [key]: getter(page[key]) }))
+  return site =>
+    site.map(page => {
+      const value = getter(page[key])
+      if (value instanceof Promise) {
+        return value.then(x => page.consume(key).override({ [key]: x }))
+      }
+      else {
+        return page.consume(key).override({ [key]: value })
+      }
+    })
 }

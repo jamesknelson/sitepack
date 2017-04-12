@@ -47,23 +47,26 @@ class Site {
     Object.freeze(this)
   }
 
-  map(callback) {
+  async map(callback) {
     const newPages = {}
-    const rootNode = this._mapPage(this.rootPage, callback)
+    const rootNode = await this._mapPage(this.rootPage, callback)
     return new Site(this._mapNode(rootNode, newPages), newPages)
   }
 
-  _mapPage(page, callback) {
+  async _mapPage(page, callback) {
     const node = {}
     // Ensure that a page's children are mapped before it is, as this allows
     // map functions to build a tree as they go.
     if (page.content instanceof Page) {
-      node.content = this._mapPage(page.content, callback)
+      node.content = await this._mapPage(page.content, callback)
     }
     if (page.children) {
-      node.children = page.children.map(child => this._mapPage(child, callback))
+      node.children = await Promise.all(page.children.map(child => this._mapPage(child, callback)))
     }
     node.page = callback(page)
+    if (node.page instanceof Promise) {
+      node.page = await node.page
+    }
     if (node.page.children !== page.children) {
       throw new Error('Sitepack does not yet support transforming Page.children')
     }
@@ -154,5 +157,9 @@ export function createSite(rootPage, transformer) {
 
 
 export function createSiteTransformer(...transforms) {
-    return (site) => transforms.reduce((acc, transform) => transform(acc), site)
+    return (site) =>
+      transforms.reduce(
+        (acc, transform) => (acc instanceof Promise) ? acc.then(accSite => transform(accSite)) : transform(acc),
+        site
+      )
 }

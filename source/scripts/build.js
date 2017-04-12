@@ -1,3 +1,5 @@
+global.regeneratorRuntime = require('regenerator-runtime/runtime')
+
 import _ from 'lodash'
 import chalk from 'chalk'
 import webpack from 'webpack'
@@ -10,7 +12,6 @@ import { getAppConfig, getSiteConfig } from '../config/webpack.config'
 import getPaths from '../config/paths'
 import getChunkNameForId from '../utils/getChunkNameForId'
 import getContentIdForPage from '../utils/getContentIdForPage'
-
 
 
 export default function build({ output, siteRoot, packageRoot, config }) {
@@ -38,94 +39,94 @@ export default function build({ output, siteRoot, packageRoot, config }) {
     console.log('Loading site data...')
 
     const fileContent = memoryFS.readFileSync("/site-bundle.js").toString('utf8');
-    
-    const site = requireFromString('var window = {}; '+fileContent, path.join(packageRoot, 'site-bundle.js')).default;
+    requireFromString('var window = {}; '+fileContent, path.join(packageRoot, 'site-bundle.js')).default.then(site => {
 
-    let cssFile;
-    const files = memoryFS.readdirSync("/")
-    const bundlePattern = /^site-bundle\.([a-z0-9]{8})\.css$/
-    for (let i = 0, len = files.length; i < len; i++) {
-      const name = files[i]
-      const matches = name.match(bundlePattern)
-      if (name === 'site-bundle.js') {
-        continue
+      let cssFile;
+      const files = memoryFS.readdirSync("/")
+      const bundlePattern = /^site-bundle\.([a-z0-9]{8})\.css$/
+      for (let i = 0, len = files.length; i < len; i++) {
+        const name = files[i]
+        const matches = name.match(bundlePattern)
+        if (name === 'site-bundle.js') {
+          continue
+        }
+        
+        if (matches) {
+          cssFile = name;
+        }
+
+        console.log(`Creating "${name}"...`)
+        const pathname = path.join(paths.output, name)
+        fs.ensureDirSync(path.dirname(pathname))
+        fs.writeFileSync(pathname, memoryFS.readFileSync('/'+name))
       }
-      
-      if (matches) {
-        cssFile = name;
-      }
 
-      console.log(`Creating "${name}"...`)
-      const pathname = path.join(paths.output, name)
-      fs.ensureDirSync(path.dirname(pathname))
-      fs.writeFileSync(pathname, memoryFS.readFileSync('/'+name))
-    }
+      console.log('Copying public files...')
+      copyPublicFolder(paths);
 
-    console.log('Copying public files...')
-    copyPublicFolder(paths);
+      console.log('Generating app scripts...')
+      const webpackConfig = getAppConfig({
+        environment: 'production',
+        config,
+        paths,
+        writeWithAssets: (assets, compilation) => {
+          const pageIds = Object.keys(site.pages)
+          for (let i = 0, len = pageIds.length; i < len; i++) {
+            const id = pageIds[i]
+            const page = site.pages[id]
 
-    console.log('Generating app scripts...')
-    const webpackConfig = getAppConfig({
-      environment: 'production',
-      config,
-      paths,
-      writeWithAssets: (assets, compilation) => {
-        const pageIds = Object.keys(site.pages)
-        for (let i = 0, len = pageIds.length; i < len; i++) {
-          const id = pageIds[i]
-          const page = site.pages[id]
+            if (page.absolutePath) {
+              let name = page.absolutePath.substr(1)
+              if (page.children) name = path.join(name, 'index')
+              name += '.html'
+              console.log(`Creating "${name}"...`)
+              let content
+              try {
+                const history = createMemoryHistory({
+                  initialEntries: [ page.absolutePath ],
+                })
 
-          if (page.absolutePath) {
-            let name = page.absolutePath.substr(1)
-            if (page.children) name = path.join(name, 'index')
-            name += '.html'
-            console.log(`Creating "${name}"...`)
-            let content
-            try {
-              const history = createMemoryHistory({
-                initialEntries: [ page.absolutePath ],
+                content = renderToString({ site, history })
+              }
+              catch (err) {
+                console.error(chalk.red("Could not render HTML"))
+                console.error(err)
+                process.exit(1)
+              }
+
+              const js = assets.js.slice(0)
+              const contentId = getContentIdForPage(page)
+              const chunkName = getChunkNameForId(contentId)
+              const chunk = compilation.namedChunks[chunkName]
+              if (chunk) {
+                js.splice(1, 0, '/'+chunk.files[0])
+              }
+
+              const template = _.template(fs.readFileSync(paths.html));
+              const html = template({
+                page: page,
+                content: content,
+                files: {
+                  ...assets,
+                  js: js,
+                  css: assets.css.concat(['/'+cssFile]),
+                }
               })
 
-              content = renderToString({ site, history })
+              const pathname = path.join(paths.output, name)
+              fs.ensureDirSync(path.dirname(pathname))
+              fs.writeFileSync(pathname, html)
             }
-            catch (err) {
-              console.error(chalk.red("Could not render HTML"))
-              console.error(err)
-              process.exit(1)
-            }
-
-            const js = assets.js.slice(0)
-            const contentId = getContentIdForPage(page)
-            const chunkName = getChunkNameForId(contentId)
-            const chunk = compilation.namedChunks[chunkName]
-            if (chunk) {
-              js.splice(1, 0, '/'+chunk.files[0])
-            }
-
-            const template = _.template(fs.readFileSync(paths.html));
-            const html = template({
-              page: page,
-              content: content,
-              files: {
-                ...assets,
-                js: js,
-                css: assets.css.concat(['/'+cssFile]),
-              }
-            })
-
-            const pathname = path.join(paths.output, name)
-            fs.ensureDirSync(path.dirname(pathname))
-            fs.writeFileSync(pathname, html)
           }
         }
-      }
-    })
-    const compiler = webpack(webpackConfig);
+      })
+      const compiler = webpack(webpackConfig);
 
-    compiler.run((err, stats) => {
-      if (err) {
-        return console.log(err);
-      }
+      compiler.run((err, stats) => {
+        if (err) {
+          return console.log(err);
+        }
+      })
     })
   })
 }
