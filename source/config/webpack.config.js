@@ -3,7 +3,8 @@ import path from 'path'
 import webpack from 'webpack'
 import HTMLWebpackPlugin from 'html-webpack-plugin'
 import ExtractTextPlugin from 'extract-text-webpack-plugin'
-import HTMLCustomWritePlugin from '../plugins/HTMLCustomWritePlugin.js'
+import HTMLCustomWritePlugin from '../plugins/HTMLCustomWritePlugin'
+import LoaderSitepackPlugin from '../plugins/LoaderSitepackPlugin'
 
 
 function getResolveConfig(paths) {
@@ -35,7 +36,7 @@ function getResolveConfig(paths) {
 }
 
 
-function transformLoaders(environment, packageRoot, loaders, extract) {
+function transformLoaders(environment, loaders, extract) {
   let i = 0
   const transformed = []
   while (i < loaders.length) {
@@ -51,7 +52,7 @@ function transformLoaders(environment, packageRoot, loaders, extract) {
       if (environment === 'static') {
         return extract.extract({
           fallback: 'style',
-          use: ["css"].concat(transformLoaders(environment, packageRoot, loaders.slice(i))),
+          use: ["css"].concat(transformLoaders(environment, loaders.slice(i))),
         })
       }
       else if (environment !== 'production') {
@@ -64,25 +65,13 @@ function transformLoaders(environment, packageRoot, loaders, extract) {
         return ['null']
       }
     }
-    else if (/^sitepack-(.*-)?page$/.test(loader.loader)) {
-      transformed.push({
-        ...loader,
-        options: {
-          ...loader.options,
-          sitepack: {
-            packageRoot,
-            environment,
-          }
-        }
-      })
-    }
     else {
       transformed.push(loader)
     }
   }
   return transformed
 }
-function transformRule(environment, packageRoot, rule, extract) {
+function transformRule(environment, rule, extract) {
   if (!rule || typeof rule !== 'object') {
     throw new Error(`Expected each rule in your sitepack config to be an object. Instead received a "${rule}".`)
   }
@@ -91,27 +80,27 @@ function transformRule(environment, packageRoot, rule, extract) {
   const { loader, options, ...other } = rule
 
   if (rule.oneOf) {
-    return { ...other, oneOf: transformRules(environment, packageRoot, rule.oneOf, extract) }
+    return { ...other, oneOf: transformRules(environment, rule.oneOf, extract) }
   }
 
   if (rule.rules) {
-    return { ...other, rules: transformRules(environment, packageRoot, rule.rules, extract) }
+    return { ...other, rules: transformRules(environment, rule.rules, extract) }
   }
 
   if (rule.use) {
-    return { ...other, use: transformLoaders(environment, packageRoot, rule.use, extract) }
+    return { ...other, use: transformLoaders(environment, rule.use, extract) }
   }
   else {
-    return { ...other, use: transformLoaders(environment, packageRoot, [{ loader, options }], extract) }
+    return { ...other, use: transformLoaders(environment, [{ loader, options }], extract) }
   }
 }
-function transformRules(environment, packageRoot, rules, extract) {
+function transformRules(environment, rules, extract) {
   if (!Array.isArray(rules)) {
     throw new Error(`Expected the "rules" export of your sitepack config to be an Array. Instead received "${rules}".`)
   }
 
   return rules.map(rule => {
-    return transformRule(environment, packageRoot, rule, extract)
+    return transformRule(environment, rule, extract)
   })
 }
 
@@ -147,10 +136,12 @@ export function getSiteConfig({ config, paths }) {
     ...getResolveConfig(paths),
 
     module: {
-      rules: transformRules('static', paths.packageRoot, config.rules, extract),
+      rules: transformRules('static', config.rules, extract),
     },
 
     plugins: [
+      new LoaderSitepackPlugin({ environment: 'static', packageRoot: paths.packageRoot }),
+
       // The site bundle will only ever be run by the build system, and the
       // build system fails on Webpack's dynamic import implementation.
       // Setting this ensures there will be no dynamic imports, so the build
@@ -193,11 +184,12 @@ export function getAppConfig({ config, environment, paths, writeWithAssets }) {
     ...getResolveConfig(paths),
 
     module: {
-      rules: transformRules(environment, paths.packageRoot, config.rules),
+      rules: transformRules(environment, config.rules),
     },
 
     plugins:
       [
+        new LoaderSitepackPlugin({ environment, packageRoot: paths.packageRoot }),
         new webpack.DefinePlugin({ 'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV) }),
         new webpack.optimize.CommonsChunkPlugin({
           name: 'vendor', 

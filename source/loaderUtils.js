@@ -4,19 +4,32 @@ import warning from './utils/warning'
 import getChunkNameForId from './utils/getChunkNameForId'
 
 
-export function loadPageWithContent(loader, options, moduleContentsAsString) {
-  const loaderOptions = getOptions(loader)
+const recordedOptions = []
+
+
+export function getSitepackOptions(loader) {
+  let loaderOptions = getOptions(loader)
 
   if (loaderOptions.lazy && loaderOptions.eager) {
     warning('Both lazy and eager were passed to a page loader! Defaulting to eager.')
   }
 
-  if (loaderOptions.raw) {
+  if (loaderOptions.raw !== undefined) {
+    return Object.assign({ raw: true }, recordedOptions[loaderOptions.raw])
+  }
+  else {
+    return loaderOptions
+  }
+}
+
+
+export function loadPageWithContent(loader, loaderOptions, options, moduleContentsAsString) {
+  if (loaderOptions.raw !== undefined) {
     return moduleContentsAsString
   }
   else {
-    const id = '/'+path.relative(loaderOptions.sitepack.packageRoot, loader.resourcePath)
-    const eagerByDefault = loaderOptions.sitepack.environment === 'static'
+    const id = '/'+path.relative(loader.sitepack.packageRoot, loader.resourcePath)
+    const eagerByDefault = loader.sitepack.environment === 'static'
     const stringifiedId = JSON.stringify(id)
     const stringifiedOptions = JSON.stringify(options)
     
@@ -25,7 +38,8 @@ export function loadPageWithContent(loader, options, moduleContentsAsString) {
         `module.exports = require('sitepack').createPage(${stringifiedId}, ${stringifiedOptions}, module.exports)`
     }
     else {
-      const nextLoaderOptions = JSON.stringify(Object.assign({}, loaderOptions, { raw: true }))
+      const nextLoaderOptions = JSON.stringify({ raw: recordedOptions.length })
+      recordedOptions.push(loaderOptions)
 
       // Find the request that would be required to get everything *after*
       // this loader -- including the JavaScript file for the page and any
