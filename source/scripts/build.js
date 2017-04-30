@@ -50,7 +50,7 @@ export default function build({ output, siteRoot, packageRoot, config }) {
         if (name === 'site-bundle.js') {
           continue
         }
-        
+
         if (matches) {
           cssFile = name;
         }
@@ -99,7 +99,7 @@ export default function build({ output, siteRoot, packageRoot, config }) {
               const chunkName = getChunkNameForId(contentId)
               const chunk = compilation.namedChunks[chunkName]
               if (chunk) {
-                js.splice(1, 0, '/'+chunk.files[0])
+                js.splice(1, 0, paths.publicPath+chunk.files[0])
               }
 
               const template = _.template(fs.readFileSync(paths.html));
@@ -109,7 +109,7 @@ export default function build({ output, siteRoot, packageRoot, config }) {
                 files: {
                   ...assets,
                   js: js,
-                  css: assets.css.concat(['/'+cssFile]),
+                  css: assets.css.concat([paths.publicPath + cssFile]),
                 }
               })
 

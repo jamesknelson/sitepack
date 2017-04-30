@@ -119,7 +119,7 @@ export function getSiteConfig({ config, paths }) {
     output: {
       path: '/',
       pathinfo: true,
-      publicPath: '/',
+      publicPath: paths.publicPath,
       library: 'Junctions',
       libraryTarget: 'commonjs2',
       filename: `site-bundle.js`,
@@ -162,7 +162,7 @@ export function getAppConfig({ config, environment, paths, writeWithAssets }) {
     devtool: isProduction ? false : 'source-map',
 
     entry: {
-      entry: 
+      entry:
         (!isProduction
           ? [require.resolve('react-dev-utils/webpackHotDevClient')]
           : [])
@@ -178,7 +178,7 @@ export function getAppConfig({ config, environment, paths, writeWithAssets }) {
       pathinfo: !isProduction,
       filename: `[name]-[chunkHash].js`,
       chunkFilename: `[name]-[chunkHash].js`,
-      publicPath: '/',
+      publicPath: paths.publicPath,
     },
 
     ...getResolveConfig(paths),
@@ -190,9 +190,12 @@ export function getAppConfig({ config, environment, paths, writeWithAssets }) {
     plugins:
       [
         new LoaderSitepackPlugin({ environment, packageRoot: paths.packageRoot }),
-        new webpack.DefinePlugin({ 'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV) }),
+        new webpack.DefinePlugin({
+          'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+          'process.env.PUBLIC_PATH': JSON.stringify(paths.publicPath),
+        }),
         new webpack.optimize.CommonsChunkPlugin({
-          name: 'vendor', 
+          name: 'vendor',
           filename: `vendor-[chunkHash].js`
         }),
         new HTMLWebpackPlugin({

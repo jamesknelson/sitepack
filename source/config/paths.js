@@ -15,10 +15,15 @@ export default function getPaths(packageRoot, siteRoot, configPaths, output) {
     .filter(folder => !path.isAbsolute(folder))
     .map(resolveSite.bind(null, packageRoot))
 
+  let publicPath =configPaths.publicPath || '/'
+  if (publicPath.slice(-1) !== '/') publicPath += '/'
+
   return {
     packageRoot,
     siteRoot,
     nodePaths,
+
+    publicPath: process.env.NODE_ENV === 'development' ? '/' : publicPath,
 
     html: resolveSite(siteRoot, configPaths.html || 'index.html.ejs'),
     loaders: resolveSite(siteRoot, configPaths.loaders || 'loaders'),
