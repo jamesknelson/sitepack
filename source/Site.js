@@ -30,7 +30,7 @@ function getDefaultPath(page, parentId) {
   return path
     .replace(/\/index\.page\.js$/, '')
     .replace(/\.page\.js$/, '')
-    .replace(/\.[a-z0-9]+$/, '')
+    .replace(/\.[a-z0-9\.-]+$/, '')
 }
 
 
