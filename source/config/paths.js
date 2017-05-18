@@ -28,6 +28,7 @@ export default function getPaths(packageRoot, siteRoot, configPaths, output) {
     html: resolveSite(siteRoot, configPaths.html || 'index.html.ejs'),
     loaders: resolveSite(siteRoot, configPaths.loaders || 'loaders'),
     main: resolveSite(siteRoot, configPaths.main || 'main.js'),
+    modules: (configPaths.modules || []).map(path => resolveSite(siteRoot, path)),
     nodeModules: resolveSite(packageRoot, 'node_modules'),
     output: resolveSite(packageRoot, output || configPaths.output || 'build'),
     public: resolveSite(siteRoot, configPaths.public || 'public'),

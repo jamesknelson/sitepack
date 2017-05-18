@@ -10,8 +10,8 @@ import LoaderSitepackPlugin from '../plugins/LoaderSitepackPlugin'
 function getResolveConfig(paths) {
   return {
     resolve: {
-      modules: ['node_modules'].concat(paths.nodePaths),
-      
+      modules: paths.modules.concat('node_modules').concat(paths.nodePaths),
+
       extensions: ['.js', '.json', '.jsx'],
 
       alias: {
