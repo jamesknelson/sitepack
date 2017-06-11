@@ -16,11 +16,17 @@ import getContentIdForPage from '../utils/getContentIdForPage'
 
 export default function build({ output, siteRoot, packageRoot, config }) {
   const paths = getPaths(packageRoot, siteRoot, config.paths, output);
+
   const renderToStringModule = require(paths.renderToString);
   const renderToString = typeof renderToStringModule == 'function' ? renderToStringModule : renderToStringModule.default
 
   if (typeof renderToString !== 'function') {
     throw new Error(`Your "renderToString" file at ${paths.renderToString} did not export a default function.`)
+  }
+
+  if (paths.modules[0]) {
+    process.env['NODE_PATH'] = paths.modules[0];
+    require('module').Module._initPaths();
   }
 
   const webpackConfig = getSiteConfig({ config, paths })
@@ -40,7 +46,7 @@ export default function build({ output, siteRoot, packageRoot, config }) {
 
     const fileContent = memoryFS.readFileSync("/site-bundle.js").toString('utf8');
     requireFromString('var window = {}; '+fileContent, path.join(packageRoot, 'site-bundle.js')).default.then(site => {
-
+      console.log('Loaded.')
       let cssFile;
       const files = memoryFS.readdirSync("/")
       const bundlePattern = /^site-bundle\.([a-z0-9]{8})\.css$/
