@@ -47,22 +47,16 @@ function transformLoaders(environment, loaders, extract) {
     else if (!loader || typeof loader !== 'object') {
       throw new Error(`Expected each set of loader options in your sitepack config to be a string or object. Instead received "${loader}".`)
     }
-    
+
     if (loader.loader === 'sitepack-css') {
-      if (environment === 'static') {
+      if (environment === 'static' || environment === 'production') {
         return extract.extract({
           fallback: 'style',
-          use: ["css"].concat(transformLoaders(environment, loaders.slice(i))),
+          use: ["css"].concat(transformLoaders(environment, loaders.slice(i), extract)),
         })
       }
-      else if (environment !== 'production') {
-        transformed.push('style', { ...loader, loader: 'css'})
-      }
       else {
-        // The generated CSS needs to take into account CSS files for every
-        // possible page. Because of this, our build CSS is generated with the
-        // site object -- not with the application.
-        return ['null']
+        transformed.push('style', { ...loader, loader: 'css'})
       }
     }
     else {
@@ -156,6 +150,7 @@ export function getSiteConfig({ config, paths }) {
 }
 
 export function getAppConfig({ config, environment, paths, writeWithAssets }) {
+  const extract = new ExtractTextPlugin({ filename: 'dummy.[contenthash:8].css', allChunks: true })
   const isProduction = environment === 'production'
 
   return {
@@ -184,7 +179,7 @@ export function getAppConfig({ config, environment, paths, writeWithAssets }) {
     ...getResolveConfig(paths),
 
     module: {
-      rules: transformRules(environment, config.rules),
+      rules: transformRules(environment, config.rules, extract),
     },
 
     plugins:
@@ -204,6 +199,7 @@ export function getAppConfig({ config, environment, paths, writeWithAssets }) {
           page: { title: 'sitepack App' },
           content: '',
         }),
+        extract,
       ]
       .concat(isProduction ? [
         new webpack.optimize.DedupePlugin(),

@@ -20,14 +20,15 @@ function createId(relativePath) {
   }
 }
 function getDefaultPath(page, parentId) {
-  let remainingParentId = parentId
-  let path = page.id
+  let remainingParentId = parentId.split('/')
+  let path = page.id.split('/')
   while (path[0] === remainingParentId[0]) {
     remainingParentId = remainingParentId.slice(1)
     path = path.slice(1)
   }
 
   return path
+    .join('/')
     .replace(/\/index\.page\.js$/, '')
     .replace(/\.page\.js$/, '')
     .replace(/\.[a-z0-9\.-]+$/, '')
@@ -51,6 +52,11 @@ class Site {
     const newPages = {}
     const rootNode = await this._mapPage(this.rootPage, callback)
     return new Site(this._mapNode(rootNode, newPages), newPages)
+  }
+
+  async forEach(callback) {
+    await this._mapPage(this.rootPage, callback)
+    return
   }
 
   async _mapPage(page, callback) {

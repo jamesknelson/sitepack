@@ -115,7 +115,7 @@ export default function build({ output, siteRoot, packageRoot, config }) {
                 files: {
                   ...assets,
                   js: js,
-                  css: assets.css.concat([paths.publicPath + cssFile]),
+                  css: assets.css.filter(file => !/dummy\..*\.css$/.test(file)).concat([paths.publicPath + cssFile]),
                 }
               })
 
