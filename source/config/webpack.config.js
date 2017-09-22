@@ -2,7 +2,7 @@ import warning from '../utils/warning'
 import path from 'path'
 import webpack from 'webpack'
 import HTMLWebpackPlugin from 'html-webpack-plugin'
-import ExtractTextPlugin from 'extract-text-webpack-plugin'
+//import ExtractTextPlugin from 'extract-text-webpack-plugin'
 import HTMLCustomWritePlugin from '../plugins/HTMLCustomWritePlugin'
 import LoaderSitepackPlugin from '../plugins/LoaderSitepackPlugin'
 
@@ -100,7 +100,7 @@ function transformRules(environment, rules, extract) {
 
 
 export function getSiteConfig({ config, paths }) {
-  const extract = new ExtractTextPlugin({ filename: 'site-bundle.[contenthash:8].css', allChunks: true })
+  //const extract = new ExtractTextPlugin({ filename: 'site-bundle.[contenthash:8].css', allChunks: true })
 
   return {
     entry: {
@@ -130,7 +130,7 @@ export function getSiteConfig({ config, paths }) {
     ...getResolveConfig(paths),
 
     module: {
-      rules: transformRules('static', config.rules, extract),
+      rules: transformRules('static', config.rules, null/*extract*/),
     },
 
     plugins: [
@@ -144,28 +144,26 @@ export function getSiteConfig({ config, paths }) {
           maxChunks: 1
       }),
 
-      extract
+      //extract
     ],
   }
 }
 
 export function getAppConfig({ config, environment, paths, writeWithAssets }) {
-  const extract = new ExtractTextPlugin({ filename: 'dummy.[contenthash:8].css', allChunks: true })
+  //const extract = new ExtractTextPlugin({ filename: 'dummy.[contenthash:8].css', allChunks: true })
   const isProduction = environment === 'production'
 
   return {
     devtool: isProduction ? false : 'source-map',
 
     entry: {
-      entry:
-        (!isProduction
-          ? [require.resolve('react-dev-utils/webpackHotDevClient')]
-          : [])
-        .concat([
-          require.resolve('./polyfills'),
-          require.resolve('../entries/webEntry'),
-        ]),
-      vendor: config.vendor || [],
+      entry: [
+        require.resolve('./polyfills'),
+        require.resolve('react-dev-utils/webpackHotDevClient'),
+        require.resolve('../entries/webEntry'),
+      ],
+      vendor:
+        config.vendor || [],
     },
 
     output: {
@@ -179,19 +177,21 @@ export function getAppConfig({ config, environment, paths, writeWithAssets }) {
     ...getResolveConfig(paths),
 
     module: {
-      rules: transformRules(environment, config.rules, extract),
+      rules: transformRules(environment, config.rules, null/*extract*/),
     },
 
     plugins:
       [
+        // Add sitepack options to the loader context
         new LoaderSitepackPlugin({ environment, packageRoot: paths.packageRoot }),
+      ].concat(isProduction ? [] : [new webpack.HotModuleReplacementPlugin()]).concat([
         new webpack.DefinePlugin({
           'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
           'process.env.PUBLIC_PATH': JSON.stringify(paths.publicPath),
         }),
         new webpack.optimize.CommonsChunkPlugin({
           name: 'vendor',
-          filename: `vendor-[chunkHash].js`
+          filename: `vendor-[hash].js`
         }),
         new HTMLWebpackPlugin({
           inject: false,
@@ -199,9 +199,9 @@ export function getAppConfig({ config, environment, paths, writeWithAssets }) {
           page: { title: 'sitepack App' },
           content: '',
         }),
-        extract,
-      ]
+      ])
       .concat(isProduction ? [
+        //extract,
         new webpack.optimize.DedupePlugin(),
         new webpack.optimize.OccurrenceOrderPlugin(),
         new webpack.optimize.UglifyJsPlugin(),
