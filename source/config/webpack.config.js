@@ -2,7 +2,7 @@ import warning from '../utils/warning'
 import path from 'path'
 import webpack from 'webpack'
 import HTMLWebpackPlugin from 'html-webpack-plugin'
-//import ExtractTextPlugin from 'extract-text-webpack-plugin'
+import ExtractTextPlugin from 'extract-text-webpack-plugin'
 import HTMLCustomWritePlugin from '../plugins/HTMLCustomWritePlugin'
 import LoaderSitepackPlugin from '../plugins/LoaderSitepackPlugin'
 
@@ -56,7 +56,15 @@ function transformLoaders(environment, loaders, extract) {
         })
       }
       else {
-        transformed.push('style', { ...loader, loader: 'css'})
+        transformed.push('style', {
+          ...loader,
+          options: {
+            ...(loader && loader.options),
+            // modules: true,
+            localIdentName: '[path][name]__[local]--[hash:base64:5]'
+          },
+          loader: 'css'
+        })
       }
     }
     else {
@@ -100,7 +108,7 @@ function transformRules(environment, rules, extract) {
 
 
 export function getSiteConfig({ config, paths }) {
-  //const extract = new ExtractTextPlugin({ filename: 'site-bundle.[contenthash:8].css', allChunks: true })
+  const extract = new ExtractTextPlugin({ filename: 'site-bundle.[contenthash:8].css', allChunks: true })
 
   return {
     entry: {
@@ -130,7 +138,7 @@ export function getSiteConfig({ config, paths }) {
     ...getResolveConfig(paths),
 
     module: {
-      rules: transformRules('static', config.rules, null/*extract*/),
+      rules: transformRules('static', config.rules, extract),
     },
 
     plugins: [
@@ -144,13 +152,13 @@ export function getSiteConfig({ config, paths }) {
           maxChunks: 1
       }),
 
-      //extract
+      extract
     ],
   }
 }
 
 export function getAppConfig({ config, environment, paths, writeWithAssets }) {
-  //const extract = new ExtractTextPlugin({ filename: 'dummy.[contenthash:8].css', allChunks: true })
+  const extract = new ExtractTextPlugin({ filename: 'dummy.[contenthash:8].css', allChunks: true })
   const isProduction = environment === 'production'
 
   return {
@@ -177,7 +185,7 @@ export function getAppConfig({ config, environment, paths, writeWithAssets }) {
     ...getResolveConfig(paths),
 
     module: {
-      rules: transformRules(environment, config.rules, null/*extract*/),
+      rules: transformRules(environment, config.rules, extract),
     },
 
     plugins:
@@ -201,7 +209,7 @@ export function getAppConfig({ config, environment, paths, writeWithAssets }) {
         }),
       ])
       .concat(isProduction ? [
-        //extract,
+        extract,
         new webpack.optimize.DedupePlugin(),
         new webpack.optimize.OccurrenceOrderPlugin(),
         new webpack.optimize.UglifyJsPlugin(),
