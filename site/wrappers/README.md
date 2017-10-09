@@ -1,0 +1,1 @@
+Webpack loads this entire directory as part of the main bundle, so that any of the files can be loaded at runtime -- even if the files are not referenced directly. Because of this, be careful of what you place in this directory.

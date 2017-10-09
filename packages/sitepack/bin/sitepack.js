@@ -51,7 +51,7 @@ program.command('build')
   .option('-c, --config [file]', 'The path to the sitepack.config.js file.', 'sitepack.config.js')
   .option('-o, --output [directory]', 'The directory to write the output to.', 'site/build')
   .action(function (command) {
-    process.env.NODE_ENV = 'production'
+    process.env.NODE_ENV = process.env.NODE_ENV || 'production'
 
     var build = require('../lib/scripts/build').default
     build(getConfig(command), function (err) {

@@ -72,7 +72,7 @@ export default function build({ output, siteRoot, packageRoot, config }) {
 
       console.log('Generating app scripts...')
       const webpackConfig = getAppConfig({
-        environment: 'production',
+        environment: process.env.NODE_ENV,
         config,
         paths,
         writeWithAssets: (assets, compilation) => {

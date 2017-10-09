@@ -1,0 +1,17 @@
+{
+  "name": "sitepack-mdx-page-loader",
+  "version": "1.0.0-beta.20",
+  "description": "Markdown/MDX page loader for sitepack",
+  "author": "James K Nelson <james@jamesknelson.com>",
+  "license": "MIT",
+  "main": "mdx-page-loader.js",
+  "peerDependencies": {
+    "sitepack": "^1.0.0-beta.20",
+    "mdxc": "^1.0.0-beta.4"
+  },
+  "dependencies": {
+    "front-matter": "^2.1.2",
+    "loader-utils": "^1.1.0",
+    "prismjs": "^1.6.0"
+  }
+}

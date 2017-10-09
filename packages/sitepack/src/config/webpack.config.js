@@ -167,9 +167,11 @@ export function getAppConfig({ config, environment, paths, writeWithAssets }) {
     entry: {
       entry: [
         require.resolve('./polyfills'),
+      ].concat(isProduction ? [] : [
         require.resolve('react-dev-utils/webpackHotDevClient'),
+      ]).concat([
         require.resolve('../entries/webEntry'),
-      ],
+      ]),
       vendor:
         config.vendor || [],
     },
@@ -194,7 +196,7 @@ export function getAppConfig({ config, environment, paths, writeWithAssets }) {
         new LoaderSitepackPlugin({ environment, packageRoot: paths.packageRoot }),
       ].concat(isProduction ? [] : [new webpack.HotModuleReplacementPlugin()]).concat([
         new webpack.DefinePlugin({
-          'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+          'process.env.NODE_ENV': JSON.stringify(environment),
           'process.env.PUBLIC_PATH': JSON.stringify(paths.publicPath),
         }),
         new webpack.optimize.CommonsChunkPlugin({
