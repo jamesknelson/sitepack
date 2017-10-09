@@ -1,5 +1,6 @@
 {
   "author": "James K Nelson <james@jamesknelson.com>",
+  "name": "site",
   "private": "true",
   "version": "0.1.0-beta.21",
   "description": "armo site",
