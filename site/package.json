@@ -1,8 +1,7 @@
 {
   "author": "James K Nelson <james@jamesknelson.com>",
-  "name": "armo-site",
   "private": "true",
-  "version": "0.3.0-beta.5",
+  "version": "0.1.0-beta.21",
   "description": "armo site",
   "license": "UNLICENSED",
   "devDependencies": {
@@ -19,8 +18,8 @@
     "react": "^16.0.0",
     "react-cx": "^0.1.4",
     "react-dom": "^16.0.0",
-    "sitepack": "1.0.0-beta.20",
-    "sitepack-react": "1.0.0-beta.20",
-    "sitepack-mdx-page-loader": "1.0.0-beta.20"
+    "sitepack": "^0.1.0-beta.21",
+    "sitepack-mdx-page-loader": "^0.1.0-beta.21",
+    "sitepack-react": "^0.1.0-beta.21"
   }
 }
