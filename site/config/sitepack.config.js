@@ -121,18 +121,18 @@ export default ({ environment }) => ({
      * search for modules
      */
     modules: [
-      '.'
+      '../content'
     ],
 
     /**
      * The directory where custom webpack loaders can be found
      */
-    loaders: './loaders',
+    loaders: '../loaders',
 
     /**
      * The directory whose contents will be copied into your build directory.
      */
-    public: './public',
+    public: '../public',
 
     /**
      * The file that exports the function that will be used to render a string

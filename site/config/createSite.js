@@ -29,7 +29,7 @@
  * modify your Page's options.
  */
 
-import './global.less'
+import '../src/global.less'
 import React from 'react'
 import { createSite, createSiteTransformer, Transforms, isContentGetter, createContentGetter } from 'sitepack'
 import { sitepackReactTransform } from 'sitepack-react'
@@ -60,13 +60,13 @@ export default ({ environment }) => {
     Transforms.addDefaultsByPattern({
       test: /content.*\.mdx?$/,
       options: {
-        wrapper: 'ArticleWrapper',
+        wrapper: 'Article',
       },
     }),
     Transforms.addDefaultsByPattern({
       test: /\.component\.jsx?$/,
       options: {
-        wrapper: 'ComponentWrapper',
+        wrapper: 'Component',
       },
     }),
 
@@ -85,7 +85,7 @@ export default ({ environment }) => {
     // file based on the string.
     Transforms.consumeByMap(
       'wrapper',
-      wrapper => wrapper && require('./wrappers/'+wrapper+'.js').default
+      wrapper => wrapper && require('../src/wrappers/'+wrapper+'.wrapper.js').default
     ),
   )
 
@@ -94,7 +94,7 @@ export default ({ environment }) => {
   //
   // This Site object will be passed through each of the transforms
   // defined above, from top to bottom.
-  const site = createSite(require('./content/index.page.js'), siteTransformer)
+  const site = createSite(require('../src/content/index.page.js'), siteTransformer)
 
   return site
 }

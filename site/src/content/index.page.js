@@ -1,6 +1,6 @@
 export default {
-  wrapper: 'SiteWrapper',
-  title: "armo-breadboard",
+  wrapper: 'Site',
+  title: "Sitepack",
   content: require('./index.md'),
   children: [
     require('./guide/intro.md'),

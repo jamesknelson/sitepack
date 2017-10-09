@@ -29,6 +29,11 @@
  * elements like titles, metadata and loading spinners.
  */
 
+
+// CAUTION:
+// You cannot import styles in files that are imported directly by this file,
+// as this file is executed within Node.js. Instead, load files in a file
+// that has been imported from a Wrapper.
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { Router } from 'sitepack-react'
