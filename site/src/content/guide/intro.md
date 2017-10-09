@@ -1,3 +1,5 @@
+*This page is a little old...*
+
 Configuring Sitepack
 --------------------
 

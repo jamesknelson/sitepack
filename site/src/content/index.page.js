@@ -4,5 +4,6 @@ export default {
   content: require('./index.md'),
   children: [
     require('./guide/intro.md'),
+    require('./guide/site.md'),
   ]
 }
