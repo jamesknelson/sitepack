@@ -1,3 +1,4 @@
 # Sitepack
 
-[Intro](./guide/intro.md)
+- [Configuring](./guide/configuring.md)
+- [`Site` Objects](./guide/site.md)

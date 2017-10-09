@@ -3,7 +3,7 @@ export default {
   title: "Sitepack",
   content: require('./index.md'),
   children: [
-    require('./guide/intro.md'),
+    require('./guide/configuring.md'),
     require('./guide/site.md'),
   ]
 }
