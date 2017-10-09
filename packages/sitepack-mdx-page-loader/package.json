@@ -7,7 +7,7 @@
   "main": "mdx-page-loader.js",
   "peerDependencies": {
     "mdxc": "^1.0.0-beta.4",
-    "sitepack": "^1.0.0-beta.20"
+    "sitepack": "^1.0.0-beta.21"
   },
   "dependencies": {
     "front-matter": "^2.1.2",
