@@ -12,7 +12,7 @@ function getResolveConfig(paths) {
     resolve: {
       modules: paths.modules.concat('node_modules').concat(paths.nodePaths),
 
-      extensions: ['.js', '.json', '.jsx'],
+      extensions: ['.js', '.json', '.jsx', '.mjs'],
 
       alias: {
         'sitepack': path.resolve(__dirname, '..'),
@@ -187,7 +187,13 @@ export function getAppConfig({ config, environment, paths, writeWithAssets }) {
     ...getResolveConfig(paths),
 
     module: {
-      rules: transformRules(environment, config.rules, extract),
+      rules: [
+        {
+          test: /\.js$/,
+          use: ["source-map-loader"],
+          enforce: "pre"
+        }
+      ].concat(transformRules(environment, config.rules, extract)),
     },
 
     plugins:
