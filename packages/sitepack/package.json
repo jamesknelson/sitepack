@@ -11,7 +11,7 @@
   "scripts": {
     "clean": "rimraf lib",
     "build": "cross-env BABEL_ENV=commonjs babel src --out-dir lib",
-    "build:watch": "cross-env BABEL_ENV=commonjs babel --watch --source-maps=inline -d lib/ src/",
+    "build:watch": "cross-env BABEL_ENV=commonjs babel --watch --source-maps -d lib/ src/",
     "prepublish": "npm run clean && npm run build"
   },
   "dependencies": {

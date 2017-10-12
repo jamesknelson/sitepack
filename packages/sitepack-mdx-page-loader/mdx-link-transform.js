@@ -7,7 +7,7 @@ var createContentGetter = Sitepack.createContentGetter
 
 function createLinkConverter(site) {
   function getSiteHref(page, href) {
-    if (href && href.indexOf('://') === -1 && href[0] !== '#') {
+    if (href && href.indexOf('mailto:') !== 0 && href.indexOf('://') === -1 && href[0] !== '#') {
       var split = href.split('#')
       var id = split[0]
       var hash = split[1]

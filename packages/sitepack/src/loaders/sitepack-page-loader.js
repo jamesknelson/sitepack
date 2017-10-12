@@ -5,7 +5,7 @@ import { stringifyRequest } from 'loader-utils'
 module.exports = function sitepackLoader(content) {
   this.clearDependencies()
 
-  const id = '/'+path.relative(this.sitepack.packageRoot, this.resourcePath)
+  const id = '/'+path.relative(this.sitepack.contentRoot, this.resourcePath)
   const stringifiedId = JSON.stringify(id)
 
   // Find the request that would be required to get everything *after*

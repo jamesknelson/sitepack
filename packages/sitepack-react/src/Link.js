@@ -61,60 +61,68 @@ export default class Link extends Component {
   }
 
   getLocation() {
-    let { page, href } = this.props
+    let { env, page: pageProp, href } = this.props
 
-    if (page && href) {
+    if (pageProp && href) {
       console.warn('You supplied both a "page" and a "href" to <Link>. Ignoring page...')
     }
 
     if (href) {
-      if (href.indexOf('://') !== -1 || href[0] == '#') {
+      if (href.indexOf('://') !== -1 || href.indexOf('mailto:') === 0 || href[0] == '#') {
         return href
       }
       const [path, hash] = href.split('#')
       return { pathname: path, hash }
     }
-    else if (page) {
-      const [pageId, hash] = page.split('#')
-
-      const page = this.props.env.site.pages[pageId]
+    else if (pageProp) {
+      const [pageId, hash] = pageProp.split('#')
+      if (!env) {
+        return
+      }
+      const page = env.site.pages[pageId]
       if (!page) {
         console.warn(`Tried to get Path for non-existent page ID "${pageId}".`)
-        return ''
-      }
-      else {
-        return page.absolutePath
+        return
       }
 
-      return { pathname: this.context.getPathForPageId(pageId), hash }
+      return { pathname: page.absolutePath, hash }
     }
-    else {
-      console.warn('Your <Link> has no "page" or "href"!')
-    }
+
+    console.warn('Your <Link> has no "page" or "href"!')
   }
 
   renderControl = (props, ...children) => {
-    const { exact, page, view, className, style, ...other } = this.props
-    const location = this.getLocation()
+    const { env, exact, page, view, className, style, ...other } = this.props
 
     if (children.length === 0 && props.children) {
       children[0] = props.children
     }
 
-    return React.createElement('a', {
+    const aProps = {
       ...other,
       ...props,
       onClick: this.handleClick,
-      href: typeof location === 'string' ? location : location.pathname,
-    }, ...children)
+    }
+
+    const location = this.getLocation()
+    if (!env) {
+      console.error(`<Link> component with page "${page}" is missing its "env" prop.`)
+      aProps.style = { backgroundColor: 'red' }
+      aProps.href = '#'
+    }
+    else if (location) {
+      aProps.href = typeof location === 'string' ? location : location.pathname
+    }
+
+    return React.createElement('a', aProps, ...children)
   }
 
   render() {
     const { env, exact, view, className, style, children } = this.props
-    const location = this.getLocation()
+    const location = this.getLocation() || {}
 
     const active =
-      typeof location !== 'string' &&
+      env && typeof location !== 'string' &&
       (exact
         ? location.pathname === env.history.location.pathname
         : env.history.location.pathname.indexOf(location.pathname) === 0)

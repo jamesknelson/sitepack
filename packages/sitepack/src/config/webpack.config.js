@@ -142,7 +142,7 @@ export function getSiteConfig({ config, paths }) {
     },
 
     plugins: [
-      new LoaderSitepackPlugin({ environment: 'static', packageRoot: paths.packageRoot }),
+      new LoaderSitepackPlugin({ environment: 'static', contentRoot: paths.contentRoot }),
 
       // The site bundle will only ever be run by the build system, and the
       // build system fails on Webpack's dynamic import implementation.
@@ -199,7 +199,7 @@ export function getAppConfig({ config, environment, paths, writeWithAssets }) {
     plugins:
       [
         // Add sitepack options to the loader context
-        new LoaderSitepackPlugin({ environment, packageRoot: paths.packageRoot }),
+        new LoaderSitepackPlugin({ environment, contentRoot: paths.contentRoot }),
       ].concat(isProduction ? [] : [new webpack.HotModuleReplacementPlugin()]).concat([
         new webpack.DefinePlugin({
           'process.env.NODE_ENV': JSON.stringify(environment),

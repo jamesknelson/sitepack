@@ -28,7 +28,7 @@ export function loadPageWithContent(loader, loaderOptions, options, moduleConten
     return moduleContentsAsString
   }
   else {
-    const id = '/'+path.relative(loader.sitepack.packageRoot, loader.resourcePath)
+    const id = '/'+path.relative(loader.sitepack.contentRoot, loader.resourcePath)
     const eagerByDefault = loader.sitepack.environment === 'static'
     const stringifiedId = JSON.stringify(id)
     const stringifiedOptions = JSON.stringify(options)

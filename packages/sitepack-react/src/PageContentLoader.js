@@ -109,9 +109,8 @@ export default class PageContentLoader extends Component {
   renderContent() {
     const state = this.state
     const props = {
-      env: this.props.env,
-      page: this.props.page,
       key: this.props.page.id,
+      page: this.props.page,
       isLoading: state.isLoading,
       content: state.content,
       error: state.error,

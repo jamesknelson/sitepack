@@ -80,7 +80,7 @@ function mdLinkReplacer(sitepackRoot, resourcePath) {
         if (token.type === 'link_open') {
           const href = token.attrGet('href');
 
-          if (href.indexOf('://') !== -1 || href[0] == '#') return;
+          if (href.indexOf('://') !== -1 || href.indexOf('mailto:') === 0 || href[0] == '#') return;
 
           const absoluteHref =
             href[0] === '/'
@@ -110,7 +110,7 @@ module.exports = function markdownLoader(content) {
     new MDXC(loaderOptions)
       .enable(['link'])
       .use(mdImageReplacer)
-      .use(mdLinkReplacer(this.sitepack.packageRoot, this.resourcePath))
+      .use(mdLinkReplacer(this.sitepack.contentRoot, this.resourcePath))
 
   if (loaderOptions.extractTitle) {
     mdxc = mdxc.use(mdTitleExtractor)

@@ -4,11 +4,14 @@
   "description": "React components for working with Sitepack",
   "author": "James K Nelson <james@jamesknelson.com>",
   "license": "MIT",
-  "main": "lib/index.js",
+  "main": "./dist/commonjs/index.js",
+  "module": "dist/es/index.js",
   "scripts": {
-    "clean": "rimraf lib",
-    "build": "cross-env BABEL_ENV=commonjs babel src --out-dir lib",
-    "build:watch": "cross-env BABEL_ENV=commonjs babel --watch --source-maps=inline -d lib/ src/",
+    "clean": "rimraf dist",
+    "build:watch": "npm run build:es -- --watch",
+    "build:es": "cross-env BABEL_ENV=es babel src --source-maps --out-dir dist/es",
+    "build:commonjs": "cross-env BABEL_ENV=commonjs babel src --source-maps --out-dir dist/commonjs",
+    "build": "npm run build:es && npm run build:commonjs",
     "prepublish": "npm run clean && npm run build"
   },
   "devDependencies": {

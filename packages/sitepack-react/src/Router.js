@@ -104,19 +104,20 @@ class Route extends Component {
 
   render() {
     const { routes: [page, ...routes], env, ...other } = this.props
+    const envWithPage = env.set('page', page)
 
     let content =
       routes.length
-        ? <Route env={env} routes={routes} />
+        ? <Route env={envWithPage} routes={routes} />
         : getDefaultImport(page.content)
 
     const contentElement =
-      React.isValidElement(content) ? content : React.createElement(content, { env, page })
+      React.isValidElement(content) ? content : React.createElement(content, { env: envWithPage, page })
 
     const wrappedContent =
       page.wrapper
-        ? React.createElement(page.wrapper, { ...other, env, page }, contentElement)
-        : contentElement && React.cloneElement(contentElement, other)
+        ? React.createElement(page.wrapper, { ...other, env: envWithPage, page }, contentElement)
+        : contentElement && React.cloneElement(contentElement, { ...other, env: envWithPage })
 
     return wrappedContent || <div />
   }
