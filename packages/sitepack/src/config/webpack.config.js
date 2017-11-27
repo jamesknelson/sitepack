@@ -7,12 +7,12 @@ import HTMLCustomWritePlugin from '../plugins/HTMLCustomWritePlugin'
 import LoaderSitepackPlugin from '../plugins/LoaderSitepackPlugin'
 
 
-function getResolveConfig(paths) {
+function getResolveConfig(paths, config) {
   return {
     resolve: {
       modules: paths.modules.concat('node_modules').concat(paths.nodePaths),
 
-      extensions: ['.js', '.json', '.jsx', '.mjs'],
+      extensions: config.defaultExtensions || ['.js', '.json', '.jsx', '.mjs'],
 
       alias: {
         'sitepack': path.resolve(__dirname, '..'),
@@ -135,7 +135,7 @@ export function getSiteConfig({ config, paths }) {
       callback();
     },
 
-    ...getResolveConfig(paths),
+    ...getResolveConfig(paths, config),
 
     module: {
       rules: transformRules('static', config.rules, extract),
@@ -184,7 +184,7 @@ export function getAppConfig({ config, environment, paths, writeWithAssets }) {
       publicPath: paths.publicPath,
     },
 
-    ...getResolveConfig(paths),
+    ...getResolveConfig(paths, config),
 
     module: {
       rules: [
