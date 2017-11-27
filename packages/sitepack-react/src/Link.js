@@ -11,8 +11,8 @@ function isModifiedEvent(event) {
 }
 
 
-function defaultLinkView({ renderControl, className, style, active, children }) {
-  return renderControl({ className, style }, children)
+function defaultLinkRenderer({ Control, className, style, active, children }) {
+  return React.createElement(Control, { className, style, children })
 }
 
 
@@ -27,11 +27,11 @@ export default class Link extends Component {
     page: PropTypes.string,
     href: PropTypes.string,
     target: PropTypes.string,
-    view: PropTypes.func.isRequired,
+    render: PropTypes.func.isRequired,
   }
 
   static defaultProps = {
-    view: defaultLinkView,
+    render: defaultLinkRenderer,
     exact: false,
   }
 
@@ -91,12 +91,8 @@ export default class Link extends Component {
     console.warn('Your <Link> has no "page" or "href"!')
   }
 
-  renderControl = (props, ...children) => {
-    const { env, exact, page, view, className, style, ...other } = this.props
-
-    if (children.length === 0 && props.children) {
-      children[0] = props.children
-    }
+  controlComponent = (props) => {
+    const { env, exact, hidden, page, render, className, style, ...other } = this.props
 
     const aProps = {
       ...other,
@@ -114,11 +110,11 @@ export default class Link extends Component {
       aProps.href = typeof location === 'string' ? location : location.pathname
     }
 
-    return React.createElement('a', aProps, ...children)
+    return React.createElement('a', aProps)
   }
 
   render() {
-    const { env, exact, view, className, style, children } = this.props
+    const { env, exact, hidden, render, className, style, children } = this.props
     const location = this.getLocation() || {}
 
     const active =
@@ -127,6 +123,6 @@ export default class Link extends Component {
         ? location.pathname === env.history.location.pathname
         : env.history.location.pathname.indexOf(location.pathname) === 0)
 
-    return React.createElement(view, { renderControl: this.renderControl, active, className, style, children })
+    return render({ Control: this.controlComponent, active, className, hidden, style, children })
   }
 }
